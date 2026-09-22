@@ -1,0 +1,1 @@
+import { usersApi, setToken } from './src/lib/api.ts'; setToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhYWFhZmNmZjhlZWY2YmQyMDUwYTE2MiIsImlhdCI6MTc4OTU3MTAyNCwiZXhwIjoxNzkyMTYzMDI0fQ.6xmd0tdXW6ilqKRgD10G-58csXCcq20XyTnnkjO5Zns'); usersApi.getMe().then(console.log).catch(console.error);  

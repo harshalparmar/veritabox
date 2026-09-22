@@ -1,0 +1,286 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 5% 96%;
+    --foreground: 0 0% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 90%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 240 5% 90%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 240 5% 90%;
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 345 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 70% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: 0 0% 9%;
+
+    --radius: 0.375rem;
+
+    --sidebar-background: 240 5% 96%;
+    --sidebar-foreground: 0 0% 40%;
+    --sidebar-primary: 0 0% 9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 90%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 240 5% 90%;
+    --sidebar-ring: 0 0% 9%;
+
+    --severity-critical: 345 72% 51%;
+    --severity-high: 25 95% 53%;
+    --severity-medium: 38 92% 50%;
+    --severity-low: 142 70% 40%;
+  }
+
+  .dark {
+    --background: 240 6% 6%;
+    --foreground: 0 0% 90%;
+
+    --card: 240 5% 9%;
+    --card-foreground: 0 0% 90%;
+
+    --popover: 240 5% 9%;
+    --popover-foreground: 0 0% 90%;
+
+    --primary: 0 0% 90%;
+    --primary-foreground: 240 6% 6%;
+
+    --secondary: 240 4% 14%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 240 4% 14%;
+    --muted-foreground: 0 0% 50%;
+
+    --accent: 240 4% 14%;
+    --accent-foreground: 0 0% 90%;
+
+    --destructive: 345 90% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 145 100% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 100% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 199 100% 55%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 240 4% 26%;
+    --input: 240 4% 26%;
+    --ring: 0 0% 90%;
+
+    --sidebar-background: 240 6% 5%;
+    --sidebar-foreground: 0 0% 55%;
+    --sidebar-primary: 0 0% 90%;
+    --sidebar-primary-foreground: 240 6% 5%;
+    --sidebar-accent: 240 5% 10%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 240 4% 26%;
+    --sidebar-ring: 0 0% 90%;
+
+    --severity-critical: 345 90% 60%;
+    --severity-high: 25 100% 58%;
+    --severity-medium: 38 100% 55%;
+    --severity-low: 145 100% 50%;
+  }
+  .maplibregl-popup-content {
+    @apply bg-transparent! shadow-none! p-0! rounded-none!;
+  }
+  .maplibregl-popup-tip {
+    @apply hidden!;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    background-color: hsl(240 5% 96%);
+  }
+
+  html.dark {
+    background-color: hsl(240 6% 4%);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+
+  /* --- MINIMAL SCROLLBAR PROTOCOL --- */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 10px;
+    transition: background 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border) / 0.5);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TACTICAL MONOCHROME & RECTANGULAR BUTTON PROTOCOL
+   ───────────────────────────────────────────────────────────────────────────── */
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+.button,
+.btn,
+.button-variant,
+.btn-variant {
+  border-radius: 2px !important;
+}
+
+/* Force all primary (blue) buttons to black/white monochrome */
+button.bg-primary,
+[type="button"].bg-primary,
+[type="submit"].bg-primary,
+[role="button"].bg-primary,
+.bg-primary:is(button, [type="button"], [type="submit"], [role="button"], .button, .btn) {
+  background-color: hsl(var(--foreground)) !important;
+  color: hsl(var(--background)) !important;
+  border-color: hsl(var(--foreground)) !important;
+}
+
+/* Hover behaviors for monochrome buttons */
+button.bg-primary:hover,
+[type="button"].bg-primary:hover,
+[type="submit"].bg-primary:hover,
+[role="button"].bg-primary:hover,
+.bg-primary:is(button, [type="button"], [type="submit"], [role="button"], .button, .btn):hover {
+  background-color: hsl(var(--foreground) / 0.9) !important;
+  color: hsl(var(--background)) !important;
+  opacity: 0.9 !important;
+}
+
+/* Force links styled with primary backgrounds to be monochrome */
+a.bg-primary,
+a[role="button"].bg-primary,
+a.bg-primary-foreground {
+  background-color: hsl(var(--foreground)) !important;
+  color: hsl(var(--background)) !important;
+  border-radius: 2px !important;
+}
+
+a.bg-primary:hover,
+a[role="button"].bg-primary:hover {
+  background-color: hsl(var(--foreground) / 0.9) !important;
+  opacity: 0.9 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FORCE ICONS THAT USE #616CD1 (PRIMARY BLUE) TO BE MONOCHROME
+   ───────────────────────────────────────────────────────────────────────────── */
+svg, .lucide {
+  --primary: var(--foreground) !important;
+  --sidebar-primary: var(--sidebar-foreground) !important;
+}
+
+/* Ensure inherited color values from parent text-primary containers also resolve to the monochrome foreground */
+.text-primary svg, .text-primary .lucide,
+[class*="text-primary/"] svg, [class*="text-primary/"] .lucide,
+[class*="hover:text-primary"]:hover svg, [class*="hover:text-primary"]:hover .lucide,
+.group:hover .group-hover\:text-primary svg, .group:hover .group-hover\:text-primary .lucide {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Handle opacity variants for inherited parent containers */
+.text-primary\/10 svg, .text-primary\/10 .lucide { color: hsl(var(--foreground) / 0.1) !important; }
+.text-primary\/20 svg, .text-primary\/20 .lucide { color: hsl(var(--foreground) / 0.2) !important; }
+.text-primary\/30 svg, .text-primary\/30 .lucide { color: hsl(var(--foreground) / 0.3) !important; }
+.text-primary\/40 svg, .text-primary\/40 .lucide { color: hsl(var(--foreground) / 0.4) !important; }
+.text-primary\/50 svg, .text-primary\/50 .lucide { color: hsl(var(--foreground) / 0.5) !important; }
+.text-primary\/60 svg, .text-primary\/60 .lucide { color: hsl(var(--foreground) / 0.6) !important; }
+.text-primary\/70 svg, .text-primary\/70 .lucide { color: hsl(var(--foreground) / 0.7) !important; }
+.text-primary\/80 svg, .text-primary\/80 .lucide { color: hsl(var(--foreground) / 0.8) !important; }
+.text-primary\/90 svg, .text-primary\/90 .lucide { color: hsl(var(--foreground) / 0.9) !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FORCE TEXT USING #3B82F680 (BLUE-500 WITH 50% OPACITY) & BLUE-500 TO BE MONOCHROME
+   ───────────────────────────────────────────────────────────────────────────── */
+.text-blue-500\/50,
+.text-\[\#3b82f680\],
+[style*="color: #3b82f680"],
+[style*="color: rgba(59, 130, 246, 0.5)"],
+[style*="color: rgb(59 130 246 / 0.5)"] {
+  color: hsl(var(--foreground) / 0.5) !important;
+}
+
+.text-blue-500,
+.text-\[\#3b82f6\] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.text-blue-500\/10 { color: hsl(var(--foreground) / 0.1) !important; }
+.text-blue-500\/20 { color: hsl(var(--foreground) / 0.2) !important; }
+.text-blue-500\/30 { color: hsl(var(--foreground) / 0.3) !important; }
+.text-blue-500\/40 { color: hsl(var(--foreground) / 0.4) !important; }
+.text-blue-500\/60 { color: hsl(var(--foreground) / 0.6) !important; }
+.text-blue-500\/70 { color: hsl(var(--foreground) / 0.7) !important; }
+.text-blue-500\/80 { color: hsl(var(--foreground) / 0.8) !important; }
+.text-blue-500\/90 { color: hsl(var(--foreground) / 0.9) !important; }
+
+.hover\:text-blue-500:hover,
+.hover\:text-blue-500\/50:hover {
+  color: hsl(var(--foreground)) !important;
+}
