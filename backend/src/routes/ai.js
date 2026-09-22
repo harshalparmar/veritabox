@@ -114,7 +114,7 @@ router.post('/chat', protect, async (req, res) => {
     --- PLATFORM ACTIVITIES ---
     ${activitiesContext.trim()}
     
-    --- KERNBOX PLATFORM GUIDE ---
+    --- VeritaBox PLATFORM GUIDE ---
     You understand all VeritaBox platform features and can guide users to the right place:
     - Roadmap: /roadmaps — Shows their career roadmap, phases, modules, topics and completion status
     - Daily Checklist: /checklist — Today's learning tasks: Theory → Practical → Assessment
