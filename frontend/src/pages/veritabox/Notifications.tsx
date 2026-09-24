@@ -1,5 +1,5 @@
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface } from "@/components/veritabox/UI";
 import { Zap, Target, Trophy, BookOpen, Users, Building2, Bell, Loader2, ArrowRight } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";

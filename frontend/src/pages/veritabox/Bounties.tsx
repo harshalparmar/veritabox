@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { VeritaBoxLayout } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { Link } from "react-router-dom";
 import { 
   Loader2, Target, Search, Clock

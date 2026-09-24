@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/lib/api";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   BookOpen, ChevronDown, ChevronRight, FileText, Search,

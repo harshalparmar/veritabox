@@ -1,4 +1,4 @@
-import { InfoPage, Section, Reveal, LiveCounter, LiveTimestamp } from "@/components/VeritaBox/InfoPage";
+import { InfoPage, Section, Reveal, LiveCounter, LiveTimestamp } from "@/components/veritabox/InfoPage";
 import { useEffect, useState } from "react";
 import { Mail, LifeBuoy, Building2, Send, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";

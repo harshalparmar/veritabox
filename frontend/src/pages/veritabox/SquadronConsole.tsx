@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, ToggleSwitch } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, ToggleSwitch } from "@/components/veritabox/UI";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi, resolveAssetUrl } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";

@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { 
   Users, Award, MapPin, Globe, Loader2,
   ChevronLeft, MessageSquare, TrendingUp, Calendar, Zap,

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface } from "@/components/veritabox/UI";
 import { 
   Send, Loader2, ShieldCheck, Globe, Users, ChevronLeft, Building2
 } from "lucide-react";

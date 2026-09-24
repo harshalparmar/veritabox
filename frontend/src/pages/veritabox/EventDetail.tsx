@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface } from "@/components/veritabox/UI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Users, Loader2, Info } from "lucide-react";

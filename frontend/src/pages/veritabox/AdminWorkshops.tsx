@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Stat, Pill } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Stat, Pill } from "@/components/veritabox/UI";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workshopsApi, chaptersApi, uploadApi, Workshop } from "@/lib/api";
 import {

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Surface } from "@/components/VeritaBox/UI";
+import { Surface } from "@/components/veritabox/UI";
 import { useQuery } from "@tanstack/react-query";
 import { projectsApi } from "@/lib/api";
 import {
@@ -104,7 +104,7 @@ export default function CircuitLabSquadronView({
             <div className="space-y-3">
               <div className="flex justify-between items-center mb-3">
                 <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.25em]">Blueprint Repository</div>
-                <Link to={`/VeritaBox/projects/create?team=${squadron._id}`} className="relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-64 text-xs h-8 px-3 border-input bg-popover hover:bg-accent/50 text-foreground shadow-sm">
+                <Link to={`/veritabox/projects/create?team=${squadron._id}`} className="relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-64 text-xs h-8 px-3 border-input bg-popover hover:bg-accent/50 text-foreground shadow-sm">
                   <Plus className="h-3.5 w-3.5" /> Build Directive
                 </Link>
               </div>

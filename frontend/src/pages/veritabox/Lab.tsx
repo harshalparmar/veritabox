@@ -1,5 +1,5 @@
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { projectsApi } from "@/lib/api";

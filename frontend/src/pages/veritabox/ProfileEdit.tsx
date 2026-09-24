@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface } from "@/components/veritabox/UI";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,9 +24,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format, subYears } from "date-fns";
 import { cn } from "@/lib/utils";
 import { ACADEMIC_DATA, BATCH_YEARS } from "@/lib/academicData";
-import { LocationSelector } from "@/components/VeritaBox/LocationSelector";
+import { LocationSelector } from "@/components/veritabox/LocationSelector";
 import { INDIAN_STATES, STATE_CITIES } from "@/lib/locations";
-import { TagPicker } from "@/components/VeritaBox/TagPicker";
+import { TagPicker } from "@/components/veritabox/TagPicker";
 
 const SKILL_SUGGESTIONS = [
   "JavaScript", "TypeScript", "React", "Next.js", "Vue.js", "Angular",

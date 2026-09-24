@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
 import { Trophy, Award, AlertCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
@@ -83,9 +83,9 @@ export default function HackathonLeaderboard({ hackathonId }: Props) {
                       </td>
                       <td className="px-4 py-4">
                         <div>
-                          {/* 3C — Link to squadron profile page via /VeritaBox/squadron/:identifier */}
+                          {/* 3C — Link to squadron profile page via /veritabox/squadron/:identifier */}
                           <Link
-                            to={`/VeritaBox/squadron/${entry.slug || entry._id}`}
+                            to={`/veritabox/squadron/${entry.slug || entry._id}`}
                             onClick={(e) => e.stopPropagation()}
                             className="text-[13px] font-bold hover:text-primary transition-colors cursor-pointer"
                           >

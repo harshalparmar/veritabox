@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Surface } from "@/components/VeritaBox/UI";
+import { Surface } from "@/components/veritabox/UI";
 import { Clock, Plus, Calendar, Globe, Shield, Trash2, Settings, Play, Pause, CheckCircle2, X, Loader2, Target } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi, forgeApi } from "@/lib/api";

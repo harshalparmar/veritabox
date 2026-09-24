@@ -1,4 +1,4 @@
-import { InfoPage, Section, Reveal, LiveCounter, LiveTimestamp } from "@/components/VeritaBox/InfoPage";
+import { InfoPage, Section, Reveal, LiveCounter, LiveTimestamp } from "@/components/veritabox/InfoPage";
 import { BookOpen, Code2, GraduationCap, Rocket, ArrowRight, Search, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 

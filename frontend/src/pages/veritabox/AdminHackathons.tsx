@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Stat, Pill } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Stat, Pill } from "@/components/veritabox/UI";
 import { 
   Plus, Search, Filter, MoreVertical, 
   Calendar, Users, Trophy, ExternalLink,

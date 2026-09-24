@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { Bookmark, Heart, MessageSquare, ChevronLeft, MoreVertical, Copy, Check, ExternalLink, CheckCircle2, Cpu, Edit, Trash2, Loader2, ArrowLeft, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
 import { useQuery } from "@tanstack/react-query";
 import { eventsApi } from "@/lib/api";
 import { Loader2, ArrowLeft, Download, Mail } from "lucide-react";

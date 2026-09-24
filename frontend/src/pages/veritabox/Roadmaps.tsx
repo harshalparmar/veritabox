@@ -6,9 +6,9 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { SectionTitle, Stat, Surface } from "@/components/VeritaBox/UI";
-import { RoadmapPhaseCard } from "@/components/VeritaBox/RoadmapPhaseCard";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { SectionTitle, Stat, Surface } from "@/components/veritabox/UI";
+import { RoadmapPhaseCard } from "@/components/veritabox/RoadmapPhaseCard";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";

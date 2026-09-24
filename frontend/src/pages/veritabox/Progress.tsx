@@ -6,9 +6,9 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, SectionTitle, Stat } from "@/components/VeritaBox/UI";
-import { SkillStatusBadge, SkillStatusDot } from "@/components/VeritaBox/SkillStatusBadge";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, SectionTitle, Stat } from "@/components/veritabox/UI";
+import { SkillStatusBadge, SkillStatusDot } from "@/components/veritabox/SkillStatusBadge";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

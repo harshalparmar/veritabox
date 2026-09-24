@@ -5,12 +5,12 @@
 
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface } from "@/components/veritabox/UI";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { learningApi } from "@/lib/api";
-import { SkillStatusBadge } from "@/components/VeritaBox/SkillStatusBadge";
+import { SkillStatusBadge } from "@/components/veritabox/SkillStatusBadge";
 import { toast } from "sonner";
 import { Loader2, ChevronLeft, ChevronRight, Cpu, CheckCircle2, XCircle, Target } from "lucide-react";
 

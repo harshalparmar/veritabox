@@ -5,8 +5,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, SectionTitle, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, SectionTitle, Pill } from "@/components/veritabox/UI";
 import { Button } from "@/components/ui/button";
 import { learningApi, aiApi } from "@/lib/api";
 import { toast } from "sonner";

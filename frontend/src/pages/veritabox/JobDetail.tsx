@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
+import { PublicShell } from "@/components/veritabox/PublicShell";
 import { Link } from "react-router-dom";
-import { Surface, Pill, SectionTitle } from "@/components/VeritaBox/UI";
+import { Surface, Pill, SectionTitle } from "@/components/veritabox/UI";
 import {
   Building2,
   MapPin,

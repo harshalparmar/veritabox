@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { MapPin, Users, Trophy, Search, Plus, Loader2, Globe, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { chaptersApi, Chapter, resolveAssetUrl } from "@/lib/api";

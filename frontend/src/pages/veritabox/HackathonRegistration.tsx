@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Stat, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Stat, Pill } from "@/components/veritabox/UI";
 import { 
   Users, Plus, ArrowRight, Loader2, Shield, 
   Terminal, UserPlus, CheckCircle2, AlertTriangle, 

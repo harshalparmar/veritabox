@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { jobsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {

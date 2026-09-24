@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { useQuery } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
 import {
@@ -116,7 +116,7 @@ export default function CompetitionSquadronView({
                   <Award className="h-3.5 w-3.5 text-primary" /> Tournament Details
                 </div>
                 {hackathon && (
-                  <Link to={`/VeritaBox/competitions/${hackathon.slug}`} className="block text-[16px] font-bold tracking-tight text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                  <Link to={`/veritabox/competitions/${hackathon.slug}`} className="block text-[16px] font-bold tracking-tight text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
                     {hackathon.title}
                     <ExternalLink className="h-3.5 w-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
                   </Link>
@@ -156,7 +156,7 @@ export default function CompetitionSquadronView({
               <div className="flex justify-between items-center mb-3">
                 <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.25em]">Real-time Standings</div>
                 {hackathon && (
-                  <Link to={`/VeritaBox/competitions/${hackathon.slug}`} className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1">
+                  <Link to={`/veritabox/competitions/${hackathon.slug}`} className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1">
                     Full Leaderboard <ArrowRight className="h-3 w-3" />
                   </Link>
                 )}

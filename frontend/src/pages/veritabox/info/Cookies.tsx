@@ -1,4 +1,4 @@
-import { InfoPage, Section, Reveal } from "@/components/VeritaBox/InfoPage";
+import { InfoPage, Section, Reveal } from "@/components/veritabox/InfoPage";
 
 export default function Cookies() {
   return (

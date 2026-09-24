@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { 
   Search, ArrowRight, BookOpen, Star, Eye, ThumbsUp, Layers, Cpu, 
   Shield, Brain, Wrench, Radio, FlaskConical, PenSquare, Sparkles, 

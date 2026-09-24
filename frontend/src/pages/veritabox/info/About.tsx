@@ -1,4 +1,4 @@
-import { InfoPage, Reveal } from "@/components/VeritaBox/InfoPage";
+import { InfoPage, Reveal } from "@/components/veritabox/InfoPage";
 
 export default function About() {
   return (

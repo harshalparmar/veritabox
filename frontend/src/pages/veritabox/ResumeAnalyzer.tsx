@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, SectionTitle, Stat } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, SectionTitle, Stat } from "@/components/veritabox/UI";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { aiApi } from "@/lib/api";
 import { Loader2, FileText, UploadCloud, AlertCircle, PlusCircle, CheckCircle, FileUp } from "lucide-react";
 import * as pdfjsLib from 'pdfjs-dist';
-import { RadarChart } from "@/components/VeritaBox/RadarChart";
+import { RadarChart } from "@/components/veritabox/RadarChart";
 
 // Point pdfjs to the worker from unpkg for simplicity
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;

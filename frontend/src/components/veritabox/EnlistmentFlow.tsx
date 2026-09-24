@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TagPicker } from "@/components/VeritaBox/TagPicker";
+import { TagPicker } from "@/components/veritabox/TagPicker";
 import { ACADEMIC_DATA, BATCH_YEARS } from "@/lib/academicData";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";

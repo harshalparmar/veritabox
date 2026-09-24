@@ -1,5 +1,5 @@
 import React from "react";
-import ProctorAuditDashboard from "@/components/VeritaBox/ProctorAuditDashboard";
+import ProctorAuditDashboard from "@/components/veritabox/ProctorAuditDashboard";
 
 interface AuditTabProps {
   id: string;

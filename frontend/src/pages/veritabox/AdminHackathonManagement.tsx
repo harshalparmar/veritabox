@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface } from "@/components/veritabox/UI";
 import { 
   Info, Clock, Target, Users, Shield, Settings, Command, FileText,
   ArrowLeft, Zap, Lock, Award, Loader2, Trash2, Plus, Trophy, X, Save

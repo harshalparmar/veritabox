@@ -1,7 +1,7 @@
 import React from "react";
-import { Surface, Stat } from "@/components/VeritaBox/UI";
+import { Surface, Stat } from "@/components/veritabox/UI";
 import { Target, ArrowRight, RefreshCw, Loader2, Shield } from "lucide-react";
-import LifecycleTimeline from "@/components/VeritaBox/LifecycleTimeline";
+import LifecycleTimeline from "@/components/veritabox/LifecycleTimeline";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
 import { toast } from "sonner";

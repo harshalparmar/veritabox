@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { Loader2, Send, Users, History, AlertCircle, CheckCircle2, Search, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { newsletterApi } from "@/lib/api";

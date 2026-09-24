@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface } from "@/components/veritabox/UI";
 import {
   ChevronLeft, MapPin, Clock, Users, Calendar, ExternalLink,
   Loader2, BookOpen, CheckCircle2, Building2, Wifi, User, FileText, Tag

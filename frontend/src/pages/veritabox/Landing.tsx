@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
+import { PublicShell } from "@/components/veritabox/PublicShell";
 import { useReveal } from "@/hooks/use-reveal";
 import { Logo3D } from "@/components/Logo3D";
 import { BanterLoader } from "@/components/BanterLoader";

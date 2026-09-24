@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill, SectionTitle } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill, SectionTitle } from "@/components/veritabox/UI";
 import {
   Building2,
   MapPin,

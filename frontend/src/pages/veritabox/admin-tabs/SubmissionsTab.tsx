@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Surface } from "@/components/VeritaBox/UI";
+import { Surface } from "@/components/veritabox/UI";
 import { ChevronDown, ChevronRight, Download, ExternalLink, FileText, Loader2, MessageSquare, Save, Star } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi, resolveAssetUrl } from "@/lib/api";

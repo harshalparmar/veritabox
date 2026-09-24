@@ -3,8 +3,8 @@ import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { Loader2, Upload, CheckCircle2, AlertCircle, FileText, Send } from "lucide-react";
 import { toast } from "sonner";
 

@@ -1,9 +1,9 @@
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Stat, SectionTitle } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Stat, SectionTitle } from "@/components/veritabox/UI";
 import { Link } from "react-router-dom";
 import { Users, Cpu, Target, BookOpen, Trophy, Building2, Store, Shield, Loader2, Globe, MessageSquare } from "lucide-react";
-import { MainnetIcon, WorkshopsIcon } from "@/components/VeritaBox/PlatformIcons";
+import { MainnetIcon, WorkshopsIcon } from "@/components/veritabox/PlatformIcons";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi, bountiesApi } from "@/lib/api";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";

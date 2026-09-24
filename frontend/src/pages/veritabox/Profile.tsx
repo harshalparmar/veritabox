@@ -1,7 +1,7 @@
 import React from "react";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill, Stat } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill, Stat } from "@/components/veritabox/UI";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 

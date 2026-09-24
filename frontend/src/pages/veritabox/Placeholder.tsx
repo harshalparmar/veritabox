@@ -1,5 +1,5 @@
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { ComingSoon } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { ComingSoon } from "@/components/veritabox/UI";
 
 /** Generic placeholder for routes that are scaffolded but not yet built out. */
 export function VeritaBoxPlaceholder({

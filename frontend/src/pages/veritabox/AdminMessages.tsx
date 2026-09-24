@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback, KeyboardEvent } from "react";
 import { Hash, Lock, Search, Send, Smile, Paperclip, Pencil, Trash2, Shield, MessageSquare, AlertCircle } from "lucide-react";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Pill, Stat, Surface } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Pill, Stat, Surface } from "@/components/veritabox/UI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

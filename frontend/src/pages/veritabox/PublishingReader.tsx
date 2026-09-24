@@ -4,8 +4,8 @@ import DOMPurify from "dompurify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import { api } from "@/lib/api";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft, Clock, Eye, BookOpen, Bookmark, BookmarkCheck,

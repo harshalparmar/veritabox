@@ -1,4 +1,4 @@
-import { InfoPage, Section, Reveal, StatusDot, LiveCounter, LiveTimestamp } from "@/components/VeritaBox/InfoPage";
+import { InfoPage, Section, Reveal, StatusDot, LiveCounter, LiveTimestamp } from "@/components/veritabox/InfoPage";
 import { useEffect, useState } from "react";
 import { systemApi, SystemStatus } from "@/lib/api";
 import { toast } from "sonner";

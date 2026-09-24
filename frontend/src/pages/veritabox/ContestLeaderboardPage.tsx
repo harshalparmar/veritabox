@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import ContestLeaderboard from "@/components/VeritaBox/ContestLeaderboard";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import ContestLeaderboard from "@/components/veritabox/ContestLeaderboard";
 import { ArrowLeft } from "lucide-react";
 
 export default function ContestLeaderboardPage() {

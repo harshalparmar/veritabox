@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import VeritaBoxLanding from "./VeritaBox/Landing";
+import VeritaBoxLanding from "./veritabox/Landing";
 
 const Index = () => {
   const { user, loading } = useAuth();

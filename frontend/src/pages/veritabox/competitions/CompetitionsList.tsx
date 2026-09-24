@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { Calendar, Users, Trophy, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { competitionsApi } from "@/lib/api";

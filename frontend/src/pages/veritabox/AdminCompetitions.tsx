@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { competitionsApi, BASE_URL, resolveAssetUrl } from "@/lib/api";
 import { Trophy, Plus, Save, Settings2, Users, FileText, CheckCircle2, XCircle, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";

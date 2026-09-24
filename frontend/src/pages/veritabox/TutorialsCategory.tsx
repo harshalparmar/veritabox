@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Eye, Clock, ChevronRight, Code2, Loader2, Bookmark, BookmarkCheck, CheckCircle2 } from "lucide-react";
 

@@ -1,5 +1,5 @@
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface } from "@/components/veritabox/UI";
 import { Crown, Search, Loader2, Trophy, Globe, MapPin } from "lucide-react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { usersApi, forgeApi, resolveAssetUrl } from "@/lib/api";

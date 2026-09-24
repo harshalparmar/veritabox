@@ -5,9 +5,9 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, SectionTitle, Stat } from "@/components/VeritaBox/UI";
-import { TaskCard } from "@/components/VeritaBox/TaskCard";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, SectionTitle, Stat } from "@/components/veritabox/UI";
+import { TaskCard } from "@/components/veritabox/TaskCard";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { checklistApi } from "@/lib/api";

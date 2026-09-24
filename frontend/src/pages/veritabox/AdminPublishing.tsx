@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { AdminLayout } from "@/components/VeritaBox/AdminLayout";
-import { PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Stat, Pill } from "@/components/VeritaBox/UI";
+import { AdminLayout } from "@/components/veritabox/AdminLayout";
+import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Stat, Pill } from "@/components/veritabox/UI";
 import { useToast } from "@/hooks/use-toast";
 import {
   Search, Eye, Trash2, Plus, Loader2, FolderPlus,

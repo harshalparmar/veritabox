@@ -1,5 +1,5 @@
 import React from "react";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
+import { PublicShell } from "@/components/veritabox/PublicShell";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
@@ -30,7 +30,7 @@ export default function SquadronProfile() {
   // Canonicalize to slug-based URL if accessed via ObjectId
   React.useEffect(() => {
     if (squadron && squadron.slug && identifier === squadron._id) {
-      const isVeritaBox = location.pathname.startsWith("/VeritaBox/");
+      const isVeritaBox = location.pathname.startsWith("/veritabox/");
       navigate(`${isVeritaBox ? "/VeritaBox" : ""}/squadron/${squadron.slug}`, { replace: true });
     }
   }, [squadron, identifier, navigate, location]);

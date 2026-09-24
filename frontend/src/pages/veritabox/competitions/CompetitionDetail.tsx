@@ -3,9 +3,9 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { competitionsApi, resolveAssetUrl } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import {
   Loader2, ArrowLeft, Trophy, Calendar, CheckCircle2, AlertCircle,
   FileText, Send, Users, Contact, Phone, Mail, Download, Lock,

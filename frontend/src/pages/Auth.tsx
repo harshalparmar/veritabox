@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ArrowRight, ArrowLeft, Mail, Lock, User as UserIcon, Eye, EyeOff, CheckCircle2, Linkedin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { HeroScene } from "@/components/VeritaBox/HeroScene";
+import { HeroScene } from "@/components/veritabox/HeroScene";
 import { cn } from "@/lib/utils";
-import { EnlistmentFlow } from "@/components/VeritaBox/EnlistmentFlow";
+import { EnlistmentFlow } from "@/components/veritabox/EnlistmentFlow";
 import { superAdminApi } from "@/lib/api";
 
 

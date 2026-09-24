@@ -1,4 +1,4 @@
-import { InfoPage, Section, FeatureCard, Reveal, Pill, LiveCounter, LiveTimestamp, LiveBar, LiveTicker } from "@/components/VeritaBox/InfoPage";
+import { InfoPage, Section, FeatureCard, Reveal, Pill, LiveCounter, LiveTimestamp, LiveBar, LiveTicker } from "@/components/veritabox/InfoPage";
 import {
   Activity, Calendar, Users, BookOpen, Shield, Lock, KeyRound, FileSearch,
 } from "lucide-react";

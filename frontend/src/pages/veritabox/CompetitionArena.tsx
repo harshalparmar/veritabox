@@ -1,5 +1,5 @@
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Pill } from "@/components/VeritaBox/UI";
-import { VeritaBoxLayout } from "@/components/VeritaBox/VeritaBoxLayout";
+import { Pill } from "@/components/veritabox/UI";
+import { VeritaBoxLayout } from "@/components/veritabox/VeritaBoxLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -38,9 +38,9 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { ACADEMIC_DATA, BATCH_YEARS } from "@/lib/academicData";
-import { LocationSelector } from "@/components/VeritaBox/LocationSelector";
+import { LocationSelector } from "@/components/veritabox/LocationSelector";
 import { INDIAN_STATES, STATE_CITIES } from "@/lib/locations";
-import { TagPicker } from "@/components/VeritaBox/TagPicker";
+import { TagPicker } from "@/components/veritabox/TagPicker";
 
 const SKILL_SUGGESTIONS = [
    "JavaScript", "TypeScript", "React", "Next.js", "Vue.js", "Angular",

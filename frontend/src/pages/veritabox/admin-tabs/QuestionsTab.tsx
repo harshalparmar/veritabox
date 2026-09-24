@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { List, Loader2, Edit3, Trash2, Command, Zap, Save, FileUp, X, Upload } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";

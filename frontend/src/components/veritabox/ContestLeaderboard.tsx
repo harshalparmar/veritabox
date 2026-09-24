@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { Trophy, Loader2, CheckCircle2, XCircle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 

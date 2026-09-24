@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Pill, Stat, SectionTitle } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Pill, Stat, SectionTitle } from "@/components/veritabox/UI";
 import { cn } from "@/lib/utils";
 import { Calendar, Users, Trophy, MapPin, ArrowRight, Loader2, Users2, Plus, CheckCircle2, Globe, Info, Shield, Target, Clock, Download, FileText, List, Lock, ShieldAlert } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,8 +8,8 @@ import { hackathonsApi, resolveAssetUrl } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import HackathonLeaderboard from "@/components/VeritaBox/HackathonLeaderboard";
-import MissionDebriefModal from "@/components/VeritaBox/MissionDebriefModal";
+import HackathonLeaderboard from "@/components/veritabox/HackathonLeaderboard";
+import MissionDebriefModal from "@/components/veritabox/MissionDebriefModal";
 import ReactMarkdown from 'react-markdown';
 
 export default function HackathonDetail() {

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface } from "@/components/veritabox/UI";
 import { Trophy, Search, ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { forgeApi } from "@/lib/api";

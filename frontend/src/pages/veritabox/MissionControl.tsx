@@ -1,5 +1,5 @@
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Stat, Pill, SectionTitle } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Stat, Pill, SectionTitle } from "@/components/veritabox/UI";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -10,7 +10,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from "recharts";
 import { NeonPatternDefs } from "@/components/NeonPatternDefs";
 import { useNeonCharts } from "@/hooks/use-neon-charts";
-import { ProfileCompletionCard } from "@/components/VeritaBox/ProfileCompletionCard";
+import { ProfileCompletionCard } from "@/components/veritabox/ProfileCompletionCard";
 import { useMemo } from "react";
 
 export default function MissionControl() {

@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill, Stat } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill, Stat } from "@/components/veritabox/UI";
 import {
   Terminal, Shield, Users, Trophy, AlertTriangle,
   Loader2, ArrowRight, Zap, Target, CheckCircle2, ChevronRight, MapPin, ExternalLink,
@@ -11,7 +11,7 @@ import { hackathonsApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import HackathonLeaderboard from "@/components/VeritaBox/HackathonLeaderboard";
+import HackathonLeaderboard from "@/components/veritabox/HackathonLeaderboard";
 import { useSecurityEnforcement } from "@/hooks/useSecurityEnforcement";
 import { useWebcamProctoring } from "@/hooks/useWebcamProctoring";
 import { useLockdown } from "@/hooks/useLockdown";

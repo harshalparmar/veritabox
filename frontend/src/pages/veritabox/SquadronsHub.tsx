@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface } from "@/components/veritabox/UI";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { 
   Loader2, Users, Plus, UserCheck, Shield, Crown
 } from "lucide-react";
-import { SquadronHQIcon } from "@/components/VeritaBox/PlatformIcons";
+import { SquadronHQIcon } from "@/components/veritabox/PlatformIcons";
 
 export default function SquadronsHub() {
   const { user } = useAuth();

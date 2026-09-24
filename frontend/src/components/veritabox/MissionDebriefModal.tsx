@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { useQuery } from "@tanstack/react-query";
 import { hackathonsApi } from "@/lib/api";
 import { Loader2, CheckCircle2, XCircle, Info, Trophy, Target, ShieldAlert } from "lucide-react";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import {
   Users, Zap, Globe, Github, ExternalLink, BrainCircuit,
   ShieldCheck, Cpu, Code2, Heart, Calendar,

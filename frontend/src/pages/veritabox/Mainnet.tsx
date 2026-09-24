@@ -2,15 +2,15 @@ import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 
 
-import { VeritaBoxLayout, PageContent } from "@/components/VeritaBox/VeritaBoxLayout";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { VeritaBoxLayout, PageContent } from "@/components/veritabox/VeritaBoxLayout";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import {
   Image, Send, Loader2,
   Zap, Award, History, MessageSquare,
   Cpu, Terminal, Users, Globe,
   ShieldCheck, ArrowRight, Edit2, Trash2, MessageCircle, X, Plus
 } from "lucide-react";
-import { MainnetIcon } from "@/components/VeritaBox/PlatformIcons";
+import { MainnetIcon } from "@/components/veritabox/PlatformIcons";
 import { useQuery } from "@tanstack/react-query";
 import { feedApi, FeedItem, resolveAssetUrl, getToken } from "@/lib/api";
 

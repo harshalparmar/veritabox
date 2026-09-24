@@ -4,7 +4,7 @@ import {
   Search, User, Package, Zap, Award, 
   Terminal, Command, X, Loader2, ArrowRight
 } from "lucide-react";
-import { Surface, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import { searchApi, SearchResults } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";

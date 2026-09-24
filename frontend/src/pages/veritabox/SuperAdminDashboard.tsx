@@ -1,4 +1,4 @@
-import { Surface, Stat, Pill } from "@/components/VeritaBox/UI";
+import { Surface, Stat, Pill } from "@/components/veritabox/UI";
 import { useState, useEffect } from "react";
 import { superAdminApi, User, setToken } from "@/lib/api";
 import { 

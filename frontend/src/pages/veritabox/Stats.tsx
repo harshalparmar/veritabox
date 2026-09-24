@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { PublicShell } from "@/components/VeritaBox/PublicShell";
-import { Surface, Stat, Pill } from "@/components/VeritaBox/UI";
+import { PublicShell } from "@/components/veritabox/PublicShell";
+import { Surface, Stat, Pill } from "@/components/veritabox/UI";
 import { 
   BarChart3, Users, Trophy, BookOpen, Cpu, Target, 
   Layers, Shield, Zap, Globe, MapPin,
