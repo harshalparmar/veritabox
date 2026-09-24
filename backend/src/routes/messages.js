@@ -6,6 +6,8 @@ import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { parseMentions } from '../utils/parseMentions.js';
 import { createNotification } from '../utils/notify.js';
+import { sanitizeUserContent } from '../utils/security.js';
+import Channel from '../models/Channel.js';
 
 const router = express.Router();
 
@@ -52,6 +54,12 @@ router.get('/search', protect, async (req, res) => {
     const safe = String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const query = { isDeleted: { $ne: true }, content: { $regex: safe, $options: 'i' } };
     if (channelId) {
+      // Verify user is a member of the channel before searching it
+      const channel = await Channel.findById(channelId);
+      if (!channel) return res.status(404).json({ message: 'Channel not found.' });
+      const isMember = channel.members.some(m => m.toString() === req.user._id.toString())
+        || channel.admins?.some(m => m.toString() === req.user._id.toString());
+      if (!isMember) return res.status(403).json({ message: 'Not a member of this channel.' });
       query.channelId = channelId;
     } else if (userId) {
       query.$or = [
@@ -169,12 +177,13 @@ router.get('/:otherUserId', protect, async (req, res) => {
 // ---------- send DM ----------
 router.post('/', protect, blockRecruiter, async (req, res) => {
   try {
-    const { receiverId, content, attachments, replyTo } = req.body;
+    const { receiverId, content: rawContent, attachments, replyTo } = req.body;
     if (!receiverId) return res.status(400).json({ message: 'receiverId required.' });
-    if (!content?.trim() && !(attachments?.length)) {
+    if (!rawContent?.trim() && !(attachments?.length)) {
       return res.status(400).json({ message: 'Empty message.' });
     }
     const senderId = req.user._id;
+    const content = sanitizeUserContent(rawContent || '');
 
     const mentionedUsers = await parseMentions(content || '');
 
@@ -329,6 +338,13 @@ router.post('/:id/pin', protect, async (req, res) => {
   try {
     const message = await Message.findById(req.params.id);
     if (!message) return res.status(404).json({ message: 'Message not found.' });
+
+    // Only sender or admin can pin/unpin
+    const isSender = message.senderId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'Admin' || req.user.isAdmin;
+    if (!isSender && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to pin/unpin this message.' });
+    }
 
     message.isPinned = !message.isPinned;
     message.pinnedAt = message.isPinned ? new Date() : null;

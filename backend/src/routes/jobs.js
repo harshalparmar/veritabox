@@ -135,8 +135,11 @@ router.get('/recruiter/job/:jobId', protect, requireRecruiter, async (req, res) 
 // POST /api/jobs - Recruiter posts a job
 router.post('/', protect, requireRecruiter, async (req, res) => {
   try {
+    const { title, company, description, type, requiredSkills, location, isRemote, salary,
+      experience, deadline, status } = req.body;
     const job = new JobOpportunity({
-      ...req.body,
+      title, company, description, type, requiredSkills, location, isRemote, salary,
+      experience, deadline, status,
       recruiter: req.user._id
     });
 
@@ -223,12 +226,32 @@ router.post('/:jobId/apply', protect, async (req, res) => {
 router.put('/application/:appId', protect, requireRecruiter, async (req, res) => {
   try {
     const { status, recruiterFeedback } = req.body;
-    const application = await JobApplication.findByIdAndUpdate(
-      req.params.appId,
-      { status, recruiterFeedback },
-      { new: true }
-    ).populate('candidate', 'name email avatarUrl username').populate('job', 'title');
-    res.json(application);
+
+    // Validate status
+    const validStatuses = ['Pending', 'Interviewing', 'Accepted', 'Rejected'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    // Find the application first to check ownership
+    const application = await JobApplication.findById(req.params.appId);
+    if (!application) return res.status(404).json({ message: 'Application not found' });
+
+    // Verify the recruiter owns the associated job
+    const job = await JobOpportunity.findById(application.job);
+    if (!job) return res.status(404).json({ message: 'Associated job not found' });
+    if (job.recruiter.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+      return res.status(403).json({ message: 'Not authorized to update this application' });
+    }
+
+    if (status) application.status = status;
+    if (recruiterFeedback !== undefined) application.recruiterFeedback = recruiterFeedback;
+    await application.save();
+
+    const populated = await JobApplication.findById(application._id)
+      .populate('candidate', 'name email avatarUrl username')
+      .populate('job', 'title');
+    res.json(populated);
   } catch (error) {
     res.status(500).json({ message: 'Error updating application: ' + error.message });
   }

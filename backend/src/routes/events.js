@@ -46,7 +46,14 @@ router.get('/:id', async (req, res) => {
 // POST /api/events - Create new tournament record (Admin Only)
 router.post('/', auth, requireAdmin, async (req, res) => {
   try {
-    const event = new Event(req.body);
+    const { title, category, subCategory, description, prizeMoney, rulebookUrl, eventDate,
+      registrationDeadline, maxTeamSize, isActive, chapterId, slug, location, coverUrl,
+      status, capacity } = req.body;
+    const event = new Event({
+      title, category, subCategory, description, prizeMoney, rulebookUrl, eventDate,
+      registrationDeadline, maxTeamSize, isActive, chapterId, slug, location, coverUrl,
+      status, capacity
+    });
     await event.save();
     res.status(201).json(event);
   } catch (error) {
@@ -57,7 +64,12 @@ router.post('/', auth, requireAdmin, async (req, res) => {
 // PUT /api/events/:id - Update mission parameters (Admin Only)
 router.put('/:id', auth, requireAdmin, async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const allowedFields = ['title', 'category', 'subCategory', 'description', 'prizeMoney',
+      'rulebookUrl', 'eventDate', 'registrationDeadline', 'maxTeamSize', 'isActive',
+      'chapterId', 'slug', 'location', 'coverUrl', 'status', 'capacity'];
+    const updates = {};
+    allowedFields.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+    const event = await Event.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!event) return res.status(404).json({ message: 'Tournament record not found.' });
     res.json(event);
   } catch (error) {
@@ -94,7 +106,16 @@ router.post('/:id/register', async (req, res) => {
     if (!event) return res.status(404).json({ message: 'Event not found.' });
 
     const { name, email, phone, status, institutionOrCompany, userId } = req.body;
-    
+
+    // Validate required fields and email format
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required.' });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format.' });
+    }
+
     // Check if already registered
     const existing = await EventRegistration.findOne({ event: event._id, email });
     if (existing) {

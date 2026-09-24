@@ -79,7 +79,8 @@ router.get('/leaderboard', async (req, res) => {
 
         res.json(populated.filter(Boolean));
     } catch (error) {
-        res.status(500).json({ message: 'Leaderboard loading failed: ' + error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Leaderboard loading failed.' });
     }
 });
 
@@ -105,6 +106,9 @@ router.get('/:id', optionalProtect, async (req, res) => {
 router.post('/:id/run', protect, async (req, res) => {
     try {
         const { code, language, customInput } = req.body;
+        if (!code || typeof code !== 'string' || code.length > 50000) {
+            return res.status(400).json({ message: 'Code must be between 1 and 50000 characters' });
+        }
         const challenge = await Challenge.findById(req.params.id);
         if (!challenge) return res.status(404).json({ message: 'Target challenge redacted.' });
 
@@ -117,7 +121,8 @@ router.post('/:id/run', protect, async (req, res) => {
             testCaseResults: evaluation.testCaseResults
         });
     } catch (error) {
-        res.status(500).json({ message: 'Code run sequence failure: ' + error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Code run sequence failure.' });
     }
 });
 
@@ -126,6 +131,9 @@ router.post('/:id/run', protect, async (req, res) => {
 router.post('/:id/submit', protect, async (req, res) => {
     try {
         const { code, language } = req.body;
+        if (!code || typeof code !== 'string' || code.length > 50000) {
+            return res.status(400).json({ message: 'Code must be between 1 and 50000 characters' });
+        }
         const challenge = await Challenge.findById(req.params.id);
 
         if (!challenge) return res.status(404).json({ message: 'Target challenge redacted.' });
@@ -193,7 +201,8 @@ router.post('/:id/submit', protect, async (req, res) => {
 
         res.status(201).json(submission);
     } catch (error) {
-        res.status(500).json({ message: 'Evaluation sequence failure: ' + error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Evaluation sequence failure.' });
     }
 });
 
@@ -234,7 +243,8 @@ router.post('/', protect, isAdmin, async (req, res) => {
 
         res.status(201).json(challenge);
     } catch (error) {
-        res.status(500).json({ message: 'Challenge creation failed: ' + error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Challenge creation failed.' });
     }
 });
 
@@ -242,16 +252,23 @@ router.post('/', protect, isAdmin, async (req, res) => {
 // @route   PUT /api/forge/:id
 router.put('/:id', protect, isAdmin, async (req, res) => {
     try {
+        const allowedFields = ['title', 'difficulty', 'tags', 'problemStatement', 'constraints',
+            'exampleInput', 'exampleOutput', 'testCases', 'reputationReward', 'activeFrom', 'isPublished'];
+        const updateData = {};
+        for (const key of allowedFields) {
+            if (req.body[key] !== undefined) updateData[key] = req.body[key];
+        }
+
         const challenge = await Challenge.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData,
             { new: true, runValidators: true }
         );
 
         if (!challenge) return res.status(404).json({ message: 'Challenge not found.' });
         res.json(challenge);
     } catch (error) {
-        res.status(500).json({ message: 'Challenge update failed: ' + error.message });
+        res.status(500).json({ message: 'Challenge update failed.' });
     }
 });
 
@@ -329,7 +346,8 @@ router.get('/:id/analytics', protect, isAdmin, async (req, res) => {
             submissions: submissionsWithUser
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error retrieving challenge metrics: ' + error.message });
+        console.error(error);
+        res.status(500).json({ message: 'Error retrieving challenge metrics.' });
     }
 });
 

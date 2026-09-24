@@ -46,6 +46,11 @@ router.post('/auth/verify', saLimiter, async (req, res) => {
   const sa = await SuperAdmin.findOne({ email });
 
   if (sa && (await sa.matchPassword(password))) {
+    // Check lockout
+    if (sa.lockedUntil && sa.lockedUntil > new Date()) {
+      return res.status(423).json({ message: 'Account locked. Try again later.' });
+    }
+
     const verified = speakeasy.totp.verify({
       secret: sa.totpSecret,
       encoding: 'base32',
@@ -66,6 +71,14 @@ router.post('/auth/verify', saLimiter, async (req, res) => {
 
       res.json({ token: saToken, email: sa.email });
     } else {
+      // Increment failed logins and check for lockout
+      sa.failedLogins = (sa.failedLogins || 0) + 1;
+      if (sa.failedLogins >= 5) {
+        sa.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+        await sa.save();
+        return res.status(423).json({ message: 'Account locked. Try again later.' });
+      }
+      await sa.save();
       res.status(404).json({ message: 'Not Found' });
     }
   } else {
@@ -84,6 +97,8 @@ router.post('/ghost/:userId', protectSA, saAudit('Possess User'), async (req, re
   try {
     const targetUser = await User.findById(req.params.userId);
     if (!targetUser) return res.status(404).json({ message: 'User not found' });
+
+    console.log(`[SA] Ghost login: SA ${req.sa._id} impersonating user ${req.params.userId}`);
 
     // Forging the Ghost JWT
     // This token is signed with the STANDARD JWT_SECRET but contains SA markers

@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
+import { invalidateUserCache } from '../utils/redis.js';
 import User from '../models/User.js';
 import Event from '../models/Event.js';
 import KnowledgeArticle from '../models/KnowledgeArticle.js';
@@ -63,7 +64,8 @@ router.get('/stats', async (req, res) => {
       pendingWorkshops
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching admin stats: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching admin stats.' });
   }
 });
 
@@ -100,7 +102,8 @@ router.put('/users/:id/role', async (req, res) => {
 
     user.role = role;
     await user.save();
-    
+    await invalidateUserCache(user._id);
+
     res.json({ message: 'User role updated', user: { _id: user._id, name: user.name, role: user.role } });
   } catch (error) {
     res.status(500).json({ message: 'Error updating user role' });
@@ -140,7 +143,8 @@ router.put('/users/:id/suspend', async (req, res) => {
 
     user.isSuspended = isSuspended;
     await user.save();
-    
+    await invalidateUserCache(user._id);
+
     res.json({ message: user.isSuspended ? 'Operative suspended' : 'Operative reactivated', isSuspended: user.isSuspended });
   } catch (error) {
     res.status(500).json({ message: 'Error toggling suspension' });
@@ -167,7 +171,8 @@ router.put('/users/:id/profile', async (req, res) => {
     
     res.json({ message: 'Operative profile updated', user });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating operative profile: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error updating operative profile.' });
   }
 });
 
@@ -211,13 +216,19 @@ router.get('/events', async (req, res) => {
 // POST /api/admin/events
 router.post('/events', async (req, res) => {
   try {
-    const eventData = { ...req.body };
-    delete eventData._id;
+    const allowedFields = ['title', 'description', 'date', 'endDate', 'location', 'type',
+      'category', 'image', 'tags', 'capacity', 'registrationLink', 'isPublished', 'status',
+      'organizer', 'meetingLink', 'slug'];
+    const eventData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) eventData[key] = req.body[key];
+    }
 
     const event = await Event.create(eventData);
     res.status(201).json(event);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating event: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error creating event.' });
   }
 });
 
@@ -365,7 +376,8 @@ router.get('/messages/conversations', async (req, res) => {
 
     res.json(populated);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving DM signal threads: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error retrieving DM signal threads.' });
   }
 });
 
@@ -384,7 +396,8 @@ router.get('/messages/channels', async (req, res) => {
     }));
     res.json(enriched);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving channels: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error retrieving channels.' });
   }
 });
 
@@ -400,7 +413,8 @@ router.post('/channels/:id/mute', async (req, res) => {
     }
     res.json({ message: 'User muted.', channel });
   } catch (error) {
-    res.status(500).json({ message: 'Error muting user: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error muting user.' });
   }
 });
 
@@ -414,7 +428,8 @@ router.post('/channels/:id/unmute', async (req, res) => {
     await channel.save();
     res.json({ message: 'User unmuted.', channel });
   } catch (error) {
-    res.status(500).json({ message: 'Error unmuting user: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error unmuting user.' });
   }
 });
 
@@ -428,7 +443,8 @@ router.delete('/channels/:id/members/:userId', async (req, res) => {
     await channel.save();
     res.json({ message: 'User removed from channel.' });
   } catch (error) {
-    res.status(500).json({ message: 'Error removing user: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error removing user.' });
   }
 });
 
@@ -448,7 +464,8 @@ router.get('/messages/conversations/:user1/:user2', async (req, res) => {
 
     res.json(messages);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching thread history: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching thread history.' });
   }
 });
 
@@ -476,7 +493,8 @@ router.delete('/messages/:id', async (req, res) => {
 
     res.json({ message: 'Message deleted successfully by administrator.' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting message: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error deleting message.' });
   }
 });
 
@@ -510,7 +528,8 @@ router.put('/messages/:id', async (req, res) => {
 
     res.json(populated);
   } catch (error) {
-    res.status(500).json({ message: 'Error editing message: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error editing message.' });
   }
 });
 
@@ -546,7 +565,8 @@ router.post('/messages/send', async (req, res) => {
 
     res.status(201).json(populated);
   } catch (error) {
-    res.status(500).json({ message: 'Error sending message as admin: ' + error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error sending message as admin.' });
   }
 });
 
@@ -556,7 +576,7 @@ router.get('/career-goals', async (req, res) => {
   try {
     const goals = await CareerGoal.find().sort({ order: 1, title: 1 }).populate('skills', 'name');
     res.json(goals);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching career goals.' }); }
 });
 
 router.post('/career-goals', async (req, res) => {
@@ -566,22 +586,30 @@ router.post('/career-goals', async (req, res) => {
     const slug = slugify(title, { lower: true, strict: true });
     const goal = await CareerGoal.create({ title, slug, description, icon, tags, suggestedDurationDays, status: status || 'Draft', order });
     res.status(201).json(goal);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error creating career goal.' }); }
 });
 
 router.put('/career-goals/:id', async (req, res) => {
   try {
-    const goal = await CareerGoal.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const allowedFields = ['title', 'slug', 'description', 'icon', 'tags', 'suggestedDurationDays', 'status', 'order', 'skills', 'coreSkills'];
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) updateData[key] = req.body[key];
+    }
+    const goal = await CareerGoal.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!goal) return res.status(404).json({ message: 'Career goal not found.' });
     res.json(goal);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating career goal.' });
+  }
 });
 
 router.delete('/career-goals/:id', async (req, res) => {
   try {
     await CareerGoal.findByIdAndDelete(req.params.id);
     res.json({ message: 'Career goal deleted.' });
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error deleting career goal.' }); }
 });
 
 // ─── SKILLS MANAGEMENT ───────────────────────────────────────────────────────
@@ -592,7 +620,7 @@ router.get('/skills', async (req, res) => {
     const filter = goalId ? { careerGoals: goalId } : {};
     const skills = await Skill.find(filter).sort({ order: 1, name: 1 }).populate('careerGoals', 'title');
     res.json(skills);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching skills.' }); }
 });
 
 router.post('/skills', async (req, res) => {
@@ -607,7 +635,7 @@ router.post('/skills', async (req, res) => {
       await CareerGoal.updateMany({ _id: { $in: careerGoals } }, { $addToSet: { skills: skill._id } });
     }
     res.status(201).json(skill);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error creating skill.' }); }
 });
 
 router.put('/skills/:id', async (req, res) => {
@@ -615,7 +643,7 @@ router.put('/skills/:id', async (req, res) => {
     const skill = await Skill.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!skill) return res.status(404).json({ message: 'Skill not found.' });
     res.json(skill);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error updating skill.' }); }
 });
 
 router.delete('/skills/:id', async (req, res) => {
@@ -625,7 +653,7 @@ router.delete('/skills/:id', async (req, res) => {
       await CareerGoal.updateMany({}, { $pull: { skills: skill._id, coreSkills: skill._id } });
     }
     res.json({ message: 'Skill deleted.' });
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error deleting skill.' }); }
 });
 
 // ─── LEARNING CONTENT MANAGEMENT ─────────────────────────────────────────────
@@ -649,7 +677,7 @@ router.get('/content', async (req, res) => {
       LearningContent.countDocuments(filter)
     ]);
     res.json({ content, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching content.' }); }
 });
 
 router.get('/content/:id', async (req, res) => {
@@ -660,7 +688,7 @@ router.get('/content/:id', async (req, res) => {
       .populate('prerequisites', 'title slug');
     if (!content) return res.status(404).json({ message: 'Content not found.' });
     res.json(content);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching content.' }); }
 });
 
 router.post('/content', async (req, res) => {
@@ -676,7 +704,7 @@ router.post('/content', async (req, res) => {
       maxQuizAttempts, practiceTask, resources, status: status || 'Draft', isDiagnosticEligible, tags
     });
     res.status(201).json(content);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error creating content.' }); }
 });
 
 router.put('/content/:id', async (req, res) => {
@@ -684,14 +712,14 @@ router.put('/content/:id', async (req, res) => {
     const content = await LearningContent.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!content) return res.status(404).json({ message: 'Content not found.' });
     res.json(content);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error updating content.' }); }
 });
 
 router.delete('/content/:id', async (req, res) => {
   try {
     await LearningContent.findByIdAndDelete(req.params.id);
     res.json({ message: 'Content deleted.' });
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error deleting content.' }); }
 });
 
 // ─── PRACTICAL SUBMISSIONS REVIEW ────────────────────────────────────────────
@@ -706,7 +734,7 @@ router.get('/submissions', async (req, res) => {
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));
     res.json(submissions);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error fetching submissions.' }); }
 });
 
 router.put('/submissions/:id/review', async (req, res) => {
@@ -760,7 +788,7 @@ router.put('/submissions/:id/review', async (req, res) => {
     }
 
     res.json(sub);
-  } catch (err) { res.status(500).json({ message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ message: 'Error reviewing submission.' }); }
 });
 
 export default router;

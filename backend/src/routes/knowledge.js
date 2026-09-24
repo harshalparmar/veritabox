@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect, optionalProtect } from '../middleware/authMiddleware.js';
+import { sanitizeUserContent } from '../utils/security.js';
 import KnowledgeArticle from '../models/KnowledgeArticle.js';
 import Comment from '../models/Comment.js';
 import ArticleCollection from '../models/ArticleCollection.js';
@@ -21,7 +22,12 @@ router.get('/categories', async (req, res) => {
 router.post('/categories', protect, async (req, res) => {
   try {
     if (!['Admin'].includes(req.user.role)) return res.status(403).json({ message: 'Unauthorized' });
-    const category = await Category.create(req.body);
+    const category = await Category.create({
+      name: req.body.name,
+      slug: req.body.slug,
+      description: req.body.description,
+      icon: req.body.icon
+    });
     res.status(201).json(category);
   } catch (error) {
     if (error.code === 11000) return res.status(400).json({ message: 'This category already exists.' });
@@ -130,7 +136,8 @@ router.post('/', protect, async (req, res) => {
   try {
     const { title, content, categoryId, slug, metaDescription, keywords, hardwareUsed, coverImage, attachments } = req.body;
     if (await KnowledgeArticle.findOne({ slug })) return res.status(400).json({ message: 'Slug already exists' });
-    const article = await KnowledgeArticle.create({ title, content, categoryId, slug, metaDescription, keywords, hardwareUsed: hardwareUsed || [], coverImage, attachments: attachments || [], author: req.user._id });
+    const sanitizedContent = content ? sanitizeUserContent(content) : '';
+    const article = await KnowledgeArticle.create({ title, content: sanitizedContent, categoryId, slug, metaDescription, keywords, hardwareUsed: hardwareUsed || [], coverImage, attachments: attachments || [], author: req.user._id });
     res.status(201).json(article);
   } catch (error) { res.status(500).json({ message: 'Error: ' + error.message }); }
 });
@@ -152,7 +159,7 @@ router.put('/:id', protect, async (req, res) => {
     }
 
     article.title = title || article.title;
-    article.content = content || article.content;
+    article.content = content ? sanitizeUserContent(content) : article.content;
     article.categoryId = categoryId || article.categoryId;
     article.slug = slug || article.slug;
     article.metaDescription = metaDescription || article.metaDescription;
@@ -232,6 +239,9 @@ router.post('/:id/comments', protect, async (req, res) => {
 });
 
 // POST /api/knowledge/:id/view - Register a new view atomically (only triggered once per session on frontend)
+// WARNING: This endpoint has no server-side rate limiting. A malicious client can
+// rapidly inflate view counts. Consider adding IP-based rate limiting middleware
+// (e.g., express-rate-limit) to prevent abuse in production.
 router.post('/:id/view', async (req, res) => {
   try {
     const article = await KnowledgeArticle.findByIdAndUpdate(

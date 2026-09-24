@@ -5,10 +5,12 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import http from 'http';
 import { Server } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
 import jwt from 'jsonwebtoken';
 import User from './models/User.js';
 import { protect, isAdmin } from './middleware/authMiddleware.js';
 import { mongoSanitize } from './middleware/sanitize.js';
+import { getRedis, cacheGet, cacheSet } from './utils/redis.js';
 
 // Load env vars
 dotenv.config();
@@ -79,7 +81,7 @@ if (IS_PROD && !ALLOWED_ORIGINS) {
 // reflect the caller's origin so local/LAN testing keeps working.
 function corsOrigin(origin, cb) {
   if (!origin) return cb(null, true); // same-origin / curl / server-to-server
-  if (!ALLOWED_ORIGINS) return cb(null, true); // dev: reflect
+  if (!ALLOWED_ORIGINS) return cb(null, /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)); // dev: restrict to localhost
   if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
   return cb(new Error('Not allowed by CORS'));
 }
@@ -92,8 +94,16 @@ app.set('trust proxy', IS_PROD ? 1 : false);
 app.use(helmet({
   // Allow assets (uploaded images) to be embedded cross-origin by the frontend
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  // CSP is enforced by the frontend host; disable here to avoid breaking API responses
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https:", "wss:"],
+    }
+  },
 }));
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
@@ -102,13 +112,28 @@ app.use(mongoSanitize);
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: corsOrigin, credentials: true } });
 
+// Redis adapter for Socket.IO — enables multi-instance pub/sub
+try {
+  const pubClient = getRedis();
+  const subClient = pubClient.duplicate();
+  io.adapter(createAdapter(pubClient, subClient));
+  console.log('[Socket.IO] Redis adapter attached');
+} catch (err) {
+  console.warn('[Socket.IO] Redis adapter failed, using in-memory:', err.message);
+}
+
 // JWT Socket Middleware
 io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Unauthorized'));
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    const cacheKey = `user:${decoded.id}`;
+    let user = await cacheGet(cacheKey);
+    if (!user) {
+      user = await User.findById(decoded.id).select('-password').lean();
+      if (user) await cacheSet(cacheKey, user, 60);
+    }
     if (!user) return next(new Error('Unauthorized'));
     socket.user = user;
     next();
@@ -117,54 +142,49 @@ io.use(async (socket, next) => {
   }
 });
 
-// In-memory hackathon presence: { hackathonId: Map<userId, { name, socketId }> }
-const hackathonPresence = new Map();
+// Redis-backed presence tracking
+const redis = getRedis();
 
-// Global user presence: userId -> Set<socketId>
-const globalPresence = new Map();
-
-function markOnline(userId, socketId) {
-  const key = userId.toString();
-  if (!globalPresence.has(key)) globalPresence.set(key, new Set());
-  const wasEmpty = globalPresence.get(key).size === 0;
-  globalPresence.get(key).add(socketId);
-  return wasEmpty;
+async function markOnline(userId, socketId) {
+  const key = `presence:global:${userId}`;
+  const sizeBefore = await redis.scard(key);
+  await redis.sadd(key, socketId);
+  return sizeBefore === 0;
 }
 
-function markOffline(userId, socketId) {
-  const key = userId.toString();
-  const set = globalPresence.get(key);
-  if (!set) return false;
-  set.delete(socketId);
-  if (set.size === 0) {
-    globalPresence.delete(key);
+async function markOffline(userId, socketId) {
+  const key = `presence:global:${userId}`;
+  await redis.srem(key, socketId);
+  const remaining = await redis.scard(key);
+  if (remaining === 0) {
+    await redis.del(key);
     return true;
   }
   return false;
 }
 
-export function getOnlineUserIds() {
-  return [...globalPresence.keys()];
+export async function getOnlineUserIds() {
+  const keys = await redis.keys('presence:global:*');
+  return keys.map(k => k.replace('presence:global:', ''));
 }
 
-function broadcastPresence(hackathonId) {
-  const members = hackathonPresence.get(hackathonId);
-  if (!members) return;
-  const list = [...members.values()];
+async function broadcastPresence(hackathonId) {
+  const data = await redis.hgetall(`presence:hackathon:${hackathonId}`);
+  if (!data || Object.keys(data).length === 0) return;
+  const list = Object.values(data).map(v => JSON.parse(v));
   io.to(`hackathon_${hackathonId}`).emit('presence_update', { hackathonId, online: list });
 }
 
 // Socket Protocol Sub-engine
-io.on('connection', (socket) => {
-  // Join their own user ID room for direct message updates
+io.on('connection', async (socket) => {
   if (socket.user && socket.user._id) {
     socket.join(socket.user._id.toString());
-    const wentOnline = markOnline(socket.user._id, socket.id);
+    const wentOnline = await markOnline(socket.user._id, socket.id);
     if (wentOnline) {
       io.emit('presence:online', { userId: socket.user._id.toString() });
     }
-    // Ship current presence snapshot to the newly connected client
-    socket.emit('presence:snapshot', { online: getOnlineUserIds() });
+    const online = await getOnlineUserIds();
+    socket.emit('presence:snapshot', { online });
   }
 
   // Join a channel room only if the user is allowed to see it. Public channels
@@ -239,18 +259,15 @@ io.on('connection', (socket) => {
         }
       }
 
-      // Keep the client-provided identifier as the room key so presence events
-      // match what the client subscribed with.
       socket.join(`hackathon_${rawId}`);
       socket.hackathonId = rawId;
 
-      if (!hackathonPresence.has(rawId)) hackathonPresence.set(rawId, new Map());
-      hackathonPresence.get(rawId).set(socket.user._id.toString(), {
+      await redis.hset(`presence:hackathon:${rawId}`, socket.user._id.toString(), JSON.stringify({
         userId: socket.user._id,
         name: socket.user.name,
         socketId: socket.id,
-      });
-      broadcastPresence(rawId);
+      }));
+      await broadcastPresence(rawId);
     } catch (err) {
       console.error('join_hackathon error:', err);
     }
@@ -316,17 +333,16 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
-    if (socket.hackathonId) {
-      const members = hackathonPresence.get(socket.hackathonId);
-      if (members) {
-        members.delete(socket.user._id.toString());
-        broadcastPresence(socket.hackathonId);
-        if (members.size === 0) hackathonPresence.delete(socket.hackathonId);
-      }
+  socket.on('disconnect', async () => {
+    if (socket.hackathonId && socket.user) {
+      const hKey = `presence:hackathon:${socket.hackathonId}`;
+      await redis.hdel(hKey, socket.user._id.toString());
+      await broadcastPresence(socket.hackathonId);
+      const remaining = await redis.hlen(hKey);
+      if (remaining === 0) await redis.del(hKey);
     }
     if (socket.user && socket.user._id) {
-      const wentOffline = markOffline(socket.user._id, socket.id);
+      const wentOffline = await markOffline(socket.user._id, socket.id);
       if (wentOffline) {
         io.emit('presence:offline', { userId: socket.user._id.toString() });
       }
@@ -341,13 +357,26 @@ app.use((req, res, next) => {
   next();
 });
 
+// Server-side logout — invalidate cached user so the token cannot be reused
+// from the cache after sign-out.
+app.post('/api/auth/logout', protect, async (req, res) => {
+  try {
+    const { cacheDelete } = await import('./utils/redis.js');
+    if (cacheDelete) await cacheDelete(`user:${req.user._id}`);
+    res.json({ message: 'Logged out' });
+  } catch { res.json({ message: 'Logged out' }); }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/roadmaps', roadmapRoutes);
 app.use('/api/checklist', checklistRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/panel/:adminToken', adminRoutes);
+app.use('/api/panel', (req, res, next) => {
+  req.adminToken = req.headers['x-admin-token'] || req.params?.adminToken;
+  next();
+}, adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
@@ -428,9 +457,14 @@ app.use((err, req, res, next) => {
 });
 
 // Database connection logic
-mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/veritabox')
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/veritabox', {
+  maxPoolSize: 20,
+  minPoolSize: 5,
+  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 5000,
+})
   .then(async () => {
-    console.log('✅ MongoDB Connected');
+    console.log('✅ MongoDB Connected (pool: 5-20)');
     await seedDefaultChannels();
   })
   .catch((err) => console.error('❌ MongoDB Connection Error:', err));

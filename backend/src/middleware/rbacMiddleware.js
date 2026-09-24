@@ -1,7 +1,9 @@
+// Role hierarchy aligned with User model enum: ['Student', 'Professional', 'Recruiter', 'Teacher', 'Founder']
+// Admin is a separate model (Admin collection), checked via req.user sourced from Admin.findById
 export const roles = {
-  ADMIN: ['Admin', 'Founder'],
-  TEACHER: ['Teacher', 'Faculty', 'Admin', 'Founder'],
-  STUDENT: ['Student', 'Member', 'Intern', 'Core Developer', 'Team Lead', 'Teacher', 'Faculty', 'Admin', 'Founder']
+  ADMIN: ['Founder'],
+  TEACHER: ['Teacher', 'Founder'],
+  STUDENT: ['Student', 'Professional', 'Recruiter', 'Teacher', 'Founder']
 };
 
 export const permit = (allowedRoles) => {

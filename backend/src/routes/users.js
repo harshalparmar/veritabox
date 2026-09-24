@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
+import { invalidateUserCache } from '../utils/redis.js';
 import User from '../models/User.js';
 import HackathonTeam from '../models/HackathonTeam.js';
 import Project from '../models/Project.js';
@@ -29,7 +30,7 @@ router.get('/leaderboard', async (req, res) => {
   try {
     const { chapter, limit = 10, page = 1 } = req.query;
     const filter = {};
-    if (chapter) filter.chapter = chapter;
+    if (chapter) filter.chapter = String(chapter);
 
     const parsedLimit = Math.min(Math.max(parseInt(limit) || 10, 1), 50); // Cap between 1 and 50
     const skip = (parseInt(page) - 1) * parsedLimit;
@@ -71,7 +72,7 @@ router.get('/check-username', async (req, res) => {
 router.get('/presence', protect, async (req, res) => {
   try {
     const { getOnlineUserIds } = await import('../index.js');
-    res.json({ online: getOnlineUserIds() });
+    res.json({ online: await getOnlineUserIds() });
   } catch (error) {
     res.json({ online: [] });
   }
@@ -151,9 +152,21 @@ router.post('/onboarding', protect, async (req, res) => {
         return res.status(400).json({ message: 'Invalid persona.' });
     }
 
+    const ALLOWED_PROFILE_FIELDS = {
+      StudentProfile: ['university', 'degree', 'graduationYear', 'department', 'careerGoals', 'currentSkills', 'interests', 'skillLevel'],
+      ProfessionalProfile: ['company', 'jobTitle', 'yearsOfExperience', 'techStack', 'industry', 'interests', 'openToMentor'],
+      RecruiterProfile: ['company', 'hiringRoles', 'linkedInUrl', 'teamSize', 'hiringUrgency', 'preferredSkills', 'industry'],
+      TeacherProfile: ['institution', 'department', 'subjectsTaught', 'experienceYears', 'preferredSkills', 'interests', 'canMentor', 'verificationMethod'],
+    };
+    const allowedFields = ALLOWED_PROFILE_FIELDS[profileModelName] || [];
+    const sanitizedProfileData = {};
+    for (const key of allowedFields) {
+      if (profileData[key] !== undefined) sanitizedProfileData[key] = profileData[key];
+    }
+
     const newProfile = await ProfileModel.create({
       user: req.user._id,
-      ...profileData
+      ...sanitizedProfileData
     });
 
     if (baseData) {
@@ -176,6 +189,7 @@ router.post('/onboarding', protect, async (req, res) => {
     user.onboardingCompleted = true;
     user.isOnboarded = true;
     await user.save();
+    await invalidateUserCache(user._id);
 
     res.json({ message: 'Onboarding completed successfully', role: user.role, profileId: user.profileId });
   } catch (error) {
@@ -404,8 +418,28 @@ router.get('/profile/:identifier', async (req, res) => {
       Challenge.countDocuments({ ...publishedQuery, difficulty: 'Elite' })
     ]);
 
+    const userObj = user.toObject();
+
+    // Strip PII for non-self views
+    if (!isSelf && !isAdmin) {
+      delete userObj.email;
+      delete userObj.phone;
+      delete userObj.dateOfBirth;
+      delete userObj.dob;
+      delete userObj.permanentAddress;
+      delete userObj.loginOtp;
+      delete userObj.resetPasswordOtp;
+      delete userObj.twoFactorSecret;
+      delete userObj.twoFactorBackupCodes;
+      delete userObj.otpAttempts;
+      delete userObj.otpLockedUntil;
+      delete userObj.failedLogins;
+      delete userObj.password;
+      delete userObj.activeSessions;
+    }
+
     res.json({
-        ...user.toObject(),
+        ...userObj,
         projects,
 
         hackathons: hackathonData,
@@ -459,7 +493,7 @@ router.put('/profile', protect, async (req, res) => {
         if (!url) return true; // allow empty
         if (url.startsWith('/')) return true; // allow local relative paths from our upload endpoint
         const parsed = new URL(url);
-        return ['http:', 'https:', 'blob:', 'data:'].includes(parsed.protocol);
+        return ['http:', 'https:'].includes(parsed.protocol);
       } catch {
         return false;
       }
@@ -543,7 +577,16 @@ router.put('/profile', protect, async (req, res) => {
     // universityId is an alternate login credential (admin-managed).
     // isOnboarded is set exclusively by the /onboarding endpoint.
 
-    const updatedUser = await user.save();
+    let updatedUser;
+    try {
+      updatedUser = await user.save();
+    } catch (saveError) {
+      if (saveError.code === 11000) {
+        return res.status(400).json({ message: 'Username already taken.' });
+      }
+      throw saveError;
+    }
+    await invalidateUserCache(updatedUser._id);
 
     res.json({
       _id: updatedUser._id,

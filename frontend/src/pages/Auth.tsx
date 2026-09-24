@@ -411,11 +411,11 @@ export default function Auth() {
         <span className="text-primary">VeritaBox.</span>
       </>
     ),
-    description: "Hackathons, bounties, circuit lab, knowledge — one identity, one reputation, every chapter.",
+    description: "Hackathons, bounties, circuit lab, knowledge, one identity, one reputation, every chapter.",
     stats: [
-      { k: "12,480", v: "operatives" },
-      { k: "186", v: "hackathons" },
-      { k: "47", v: "chapters" },
+      { k: "12+", v: "modules" },
+      { k: "0", v: "hidden costs" },
+      { k: "24/7", v: "access" },
     ]
   } : {
     tag: "Secure gateway · authorized",
@@ -430,7 +430,7 @@ export default function Auth() {
     stats: [
       { k: "99.98%", v: "gateway uptime" },
       { k: "14 ms", v: "latency ping" },
-      { k: "2,841", v: "active nodes" },
+      { k: "Secure", v: "connection" },
     ]
   };
 

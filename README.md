@@ -6,6 +6,7 @@ VeritaBox is a comprehensive platform for managing hackathons, competitions, and
 
 - **Event Management**: Create and manage hackathons, competitions, and workshops.
 - **Participant Dashboard**: Track registrations, progress, and upcoming events.
+- **CodeForge**: Built-in coding challenge execution engine supporting C, C++, Python, and JavaScript.
 - **Team Management**: Form squadrons (teams) for competitions and hackathons.
 - **Real-time Updates**: Real-time notifications and updates using WebSockets.
 - **Automated Communication**: Summon emails, automated participation certificates, and event ID cards with QR verification.
@@ -29,9 +30,11 @@ The repository is organized into two main parts:
 - **3D & Visualization**: React Three Fiber / Drei, Recharts, Maplibre
 - **Language**: TypeScript
 
-### Backend
+### Backend & Infrastructure
 - **Framework**: Express.js
-- **Database**: MongoDB (Mongoose)
+- **Database**: MongoDB (Mongoose) - *Containerized*
+- **Caching & Real-time**: Redis - *Containerized*
+- **Code Execution**: Piston (CodeForge Engine) - *Containerized*
 - **Authentication**: JWT, Google Auth Library, bcryptjs, speakeasy
 - **Real-time**: Socket.io
 - **AI Integration**: OpenAI
@@ -41,9 +44,24 @@ The repository is organized into two main parts:
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- MongoDB
+- Docker Desktop (Required for running the platform infrastructure)
 
-### Backend Setup
+### 1. Infrastructure Setup (Docker)
+
+The VeritaBox platform relies on MongoDB, Redis, and Piston (Code execution engine). These are all orchestrated via Docker Compose.
+
+1. Ensure Docker Desktop is running.
+2. From the root directory, start the infrastructure:
+   ```bash
+   docker-compose up -d
+   ```
+3. Initialize the Piston execution engine (Installs Python, Node.js, and GCC compilers inside the container):
+   ```bash
+   node backend/scripts/initPiston.js
+   ```
+   *(Note: Run this initialization script whenever you deploy to a fresh server.)*
+
+### 2. Backend Setup
 
 1. Navigate to the backend directory:
    ```bash
@@ -56,20 +74,23 @@ The repository is organized into two main parts:
 3. Set up the environment variables:
    - Create a `.env` file in the `backend/` directory with the following variables:
      ```env
-     MONGO_URI=mongodb://127.0.0.1:27017/VeritaBox
+     # Infrastructure Connections
+     MONGO_URI=mongodb://Yw9Th38vdzys:X798JE15EM4w@127.0.0.1:27018/mtGM8205T43e?authSource=admin
+     REDIS_URL=redis://:tk6DVl05CmzJ@127.0.0.1:6379/0
+     PISTON_URL=http://localhost:2000
+     
      JWT_SECRET=your_jwt_secret_here
+     SA_JWT_SECRET=your_sa_jwt_secret_here
      PORT=5000
+     NODE_ENV=development
      
      # OAuth Credentials
      GOOGLE_CLIENT_ID=your_google_client_id
      GOOGLE_CLIENT_SECRET=your_google_client_secret
-     
      GITHUB_CLIENT_ID=your_github_client_id
      GITHUB_CLIENT_SECRET=your_github_client_secret
-     
      MICROSOFT_CLIENT_ID=your_microsoft_client_id
      MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
-     
      LINKEDIN_CLIENT_ID=your_linkedin_client_id
      LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret
      
@@ -83,7 +104,7 @@ The repository is organized into two main parts:
    npm run dev
    ```
 
-### Frontend Setup
+### 3. Frontend Setup
 
 1. Navigate to the frontend directory:
    ```bash

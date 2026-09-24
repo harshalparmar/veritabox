@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { PublicShell } from "@/components/VeritaBox/PublicShell";
 import { useReveal } from "@/hooks/use-reveal";
 import { Logo3D } from "@/components/Logo3D";
+import { BanterLoader } from "@/components/BanterLoader";
 import { useTheme } from "next-themes";
 import {
   ArrowRight, Code2, Trophy, Wrench, Target, BookOpen, Zap,
@@ -18,14 +19,14 @@ const modules = [
   {
     icon: Trophy,
     title: "Hackathons",
-    desc: "Squadron-based time-bound builds with shared canvas, relay comms and deadline timer.",
+    desc: "Squadron based time bound builds with shared canvas, relay comms and deadline timer.",
     to: "/hackathons",
     accent: "from-amber-500 to-orange-600",
   },
   {
     icon: Swords,
     title: "Competitions",
-    desc: "Multi-round competitive arenas with live leaderboards and proctored assessments.",
+    desc: "Multi round competitive arenas with live leaderboards and proctored assessments.",
     to: "/competitions",
     accent: "from-red-500 to-rose-600",
   },
@@ -46,42 +47,42 @@ const modules = [
   {
     icon: Wrench,
     title: "Circuit Lab",
-    desc: "Living build logs — schematics, BOM, photos, stages from Planning to Showcase.",
+    desc: "Living build logs, schematics, BOM, photos, stages from Planning to Showcase.",
     to: "/lab",
     accent: "from-orange-500 to-red-600",
   },
   {
     icon: BookOpen,
     title: "Knowledge Hub",
-    desc: "Field-tested articles, learning paths, and technical documentation.",
+    desc: "Field tested articles, learning paths, and technical documentation.",
     to: "/knowledge",
     accent: "from-emerald-500 to-green-600",
   },
   {
     icon: GraduationCap,
     title: "Workshops",
-    desc: "Guided hands-on learning sessions with registration, materials, and certificates.",
+    desc: "Guided hands on learning sessions with registration, materials, and certificates.",
     to: "/workshops",
     accent: "from-violet-500 to-purple-600",
   },
   {
     icon: Calendar,
     title: "Events",
-    desc: "Campus-wide happenings with digital ID cards, registrations, and attendance.",
+    desc: "Campus wide happenings with digital ID cards, registrations, and attendance.",
     to: "/events",
     accent: "from-pink-500 to-fuchsia-600",
   },
   {
     icon: Map,
     title: "Roadmaps",
-    desc: "AI-generated personalised learning paths with phased modules and progress tracking.",
+    desc: "AI generated personalised learning paths with phased modules and progress tracking.",
     to: "/roadmaps",
     accent: "from-teal-500 to-emerald-600",
   },
   {
     icon: Newspaper,
     title: "Tutorials",
-    desc: "Long-form published content with categories — learn at your own pace.",
+    desc: "Long form published content with categories, learn at your own pace.",
     to: "/tutorials",
     accent: "from-blue-500 to-indigo-600",
   },
@@ -95,7 +96,7 @@ const modules = [
   {
     icon: Users,
     title: "Chapters",
-    desc: "Institute-level coalitions with leaderboards, management, and chapter commands.",
+    desc: "Institute level coalitions with leaderboards, management, and chapter commands.",
     to: "/chapters",
     accent: "from-indigo-500 to-violet-600",
   },
@@ -109,7 +110,7 @@ const stats = [
 
 const steps = [
   { icon: GitBranch, num: "01", title: "Enlist", desc: "Sign up, pick your institute, and set your career goal." },
-  { icon: Target, num: "02", title: "Take a mission", desc: "Bounties, hackathons, competitions, forge — your choice." },
+  { icon: Target, num: "02", title: "Take a mission", desc: "Bounties, hackathons, competitions, forge, your choice." },
   { icon: Users, num: "03", title: "Ship together", desc: "Squadron canvas, relay comms, deadline timer." },
   { icon: Award, num: "04", title: "Bank reputation", desc: "Verdicts feed your profile. Rank up. Repeat." },
 ];
@@ -192,11 +193,6 @@ export default function VeritaBoxLanding() {
           <div className="pt-[52px] pb-20 relative flex">
             {/* Left — text */}
             <div className="relative z-[3] flex-1 min-w-0 max-w-[560px]">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card/80 backdrop-blur text-[11px] text-muted-foreground mb-6">
-                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                Now live — veritabox.com
-              </div>
-
               <h1 className="text-[clamp(2.2rem,4.5vw,3.4rem)] font-[500] leading-[1.08] tracking-[-0.04em] text-foreground max-w-[560px]">
                 One platform for{" "}
                 <span className="bg-gradient-to-r from-primary via-primary to-emerald-500 bg-clip-text text-transparent font-semibold">
@@ -206,20 +202,16 @@ export default function VeritaBoxLanding() {
 
               <p className="mt-6 text-[15px] leading-relaxed text-muted-foreground max-w-[480px]">
                 VeritaBox unifies hackathons, competitions, coding challenges, workshops,
-                events, learning roadmaps, and career tools into a single identity —
+                events, learning roadmaps, and career tools into a single identity,
                 so institutes and builders can focus on what matters.
               </p>
 
               <div className="mt-10 flex items-center gap-4 flex-wrap">
                 <Link to="/register">
                   <button className="group relative inline-flex items-center gap-2 px-6 py-3 text-[14px] font-medium bg-foreground text-background transition-all duration-200 hover:bg-foreground/90 rounded-md">
-                    Get started free
+                    Enlist Now
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </button>
-                </Link>
-                <Link to="/hackathons" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5 group">
-                  Explore platform
-                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
 
@@ -236,13 +228,13 @@ export default function VeritaBoxLanding() {
 
             {/* Mobile 3D cube */}
             <div className="absolute inset-0 flex items-center justify-center z-[1] opacity-55 dark:opacity-45 md:hidden pointer-events-none">
-              <Logo3D variant={1} size={450} zoom={190} bgHex={isDark ? "#0e0e10" : "#ffffff"} lineHex={isDark ? "#58585e" : "#c0c0c8"} />
+              <BanterLoader scale={1.8} />
             </div>
 
             {/* Desktop 3D cube */}
             <div className="hidden md:block flex-1 relative z-[1] pointer-events-none" style={{ minWidth: 0 }}>
-              <div className="absolute top-1/2 right-0" style={{ width: 840, height: 840, transform: "translate(140px, calc(-50% + -80px))" }}>
-                <Logo3D variant={1} size={840} zoom={cubeZoom} bgHex={isDark ? "#0e0e10" : "#ffffff"} lineHex={isDark ? "#58585e" : "#c0c0c8"} />
+              <div className="absolute top-1/2 right-0 flex items-center justify-center" style={{ width: 840, height: 840, transform: "translate(140px, calc(-50% + -80px))" }}>
+                <BanterLoader scale={3.5} />
               </div>
             </div>
           </div>
@@ -261,12 +253,9 @@ export default function VeritaBoxLanding() {
                 <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">Platform</div>
                 <h2 className="text-[28px] font-semibold tracking-tight mt-1">Everything you need, unified.</h2>
                 <p className="text-[14px] text-muted-foreground mt-2 max-w-md">
-                  Twelve integrated modules — from competitive arenas to career tools — all connected through a single reputation system.
+                  Twelve integrated modules, from competitive arenas to career tools, all connected through a single reputation system.
                 </p>
               </div>
-              <Link to="/about" className="group text-[13px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 shrink-0">
-                Learn more <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </Link>
             </div>
           </Reveal>
 
@@ -291,75 +280,21 @@ export default function VeritaBoxLanding() {
         </div>
       </section>
 
-      {/* ===================== PRODUCT SHOWCASE ===================== */}
-      <section className="px-6 py-20 border-b border-border bg-card/30">
-        <div className="mx-auto max-w-[1200px]">
-          <Reveal>
-            <div className="text-center mb-14">
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">Built for institutes</div>
-              <h2 className="text-[28px] font-semibold tracking-tight mt-1">From enlistment to placement.</h2>
-              <p className="text-[14px] text-muted-foreground mt-2 max-w-lg mx-auto">
-                VeritaBox covers the complete student lifecycle — onboarding, skill building, competitive exposure, and career readiness.
-              </p>
-            </div>
-          </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                icon: FlaskConical,
-                title: "Learn & Practice",
-                items: ["AI-powered learning roadmaps", "Daily checklists & progress tracking", "Knowledge hub & tutorials", "Skill quizzes & diagnostics"],
-                accent: "text-emerald-500",
-                border: "border-emerald-500/20",
-              },
-              {
-                icon: Swords,
-                title: "Compete & Build",
-                items: ["Multi-round hackathons & competitions", "Code Forge algorithmic challenges", "Circuit Lab hardware builds", "Bounty missions for reputation"],
-                accent: "text-primary",
-                border: "border-primary/20",
-              },
-              {
-                icon: Briefcase,
-                title: "Connect & Grow",
-                items: ["Jobs board with recruiter tools", "Resume analyser & career diagnostics", "Chapter-level leaderboards", "Workshop certificates & event IDs"],
-                accent: "text-amber-500",
-                border: "border-amber-500/20",
-              },
-            ].map((col, i) => (
-              <Reveal key={col.title} delay={i * 100}>
-                <div className={cn("bg-card border rounded-lg p-6 h-full", col.border)}>
-                  <col.icon className={cn("h-6 w-6 mb-4", col.accent)} />
-                  <h3 className="text-[16px] font-semibold mb-4">{col.title}</h3>
-                  <ul className="space-y-2.5">
-                    {col.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-[13px] text-muted-foreground">
-                        <div className={cn("h-1.5 w-1.5 rounded-full mt-1.5 shrink-0", col.accent.replace("text-", "bg-"))} />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ===================== HOW IT WORKS ===================== */}
-      <section className="px-6 py-20 border-b border-border">
+      <section className="px-6 py-20 border-b border-border bg-card/30">
         <div className="mx-auto max-w-[1100px]">
           <Reveal>
-            <div className="text-center mb-12">
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">How it works</div>
+            <div className="text-center mb-14">
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">Workflow</div>
               <h2 className="text-[28px] font-semibold tracking-tight mt-1">Four steps to get started.</h2>
             </div>
           </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-[2px] bg-border overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4 relative">
+            {/* Connecting line (Desktop only) */}
+            <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-[2px] bg-border overflow-hidden rounded-full">
               <div className="h-full bg-primary animate-pulse-flow w-1/3 rounded-full" />
             </div>
 
@@ -369,82 +304,23 @@ export default function VeritaBoxLanding() {
                 <Reveal key={step.num} delay={i * 120}>
                   <div
                     onMouseEnter={() => setActiveStep(i)}
-                    className="relative text-center md:text-left"
+                    className="relative text-left md:text-center"
                   >
                     <div className={cn(
-                      "inline-flex items-center justify-center h-14 w-14 rounded-xl border-2 transition-all duration-300 mx-auto md:mx-0",
-                      isActive ? "border-primary bg-primary/10" : "border-border bg-card"
+                      "inline-flex items-center justify-center h-12 w-12 md:h-14 md:w-14 rounded-xl border transition-all duration-300 md:mx-auto",
+                      isActive ? "border-primary bg-primary/10 shadow-sm" : "border-border/50 bg-card/50"
                     )}>
-                      <step.icon className={cn("h-6 w-6 transition-colors", isActive ? "text-primary" : "text-muted-foreground")} />
+                      <step.icon className={cn("h-5 w-5 md:h-6 md:w-6 transition-colors", isActive ? "text-primary" : "text-muted-foreground")} />
                     </div>
-                    <div className="mt-4">
-                      <div className="text-[10px] font-mono text-muted-foreground">{step.num}</div>
-                      <div className="text-[15px] font-semibold mt-0.5">{step.title}</div>
-                      <div className="text-[12.5px] text-muted-foreground mt-1.5 leading-relaxed">{step.desc}</div>
+                    <div className="mt-4 md:mt-5">
+                      <div className="text-[10px] font-mono text-muted-foreground/80 font-medium mb-1">{step.num}</div>
+                      <div className="text-[14px] md:text-[15px] font-semibold text-foreground tracking-tight leading-tight">{step.title}</div>
+                      <div className="text-[12px] md:text-[12.5px] text-muted-foreground mt-2 leading-relaxed max-w-[90%] md:mx-auto">{step.desc}</div>
                     </div>
                   </div>
                 </Reveal>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* ===================== FOR INSTITUTES ===================== */}
-      <section className="px-6 py-20 border-b border-border">
-        <div className="mx-auto max-w-[1100px]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <Reveal>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">For institutes</div>
-                <h2 className="text-[28px] font-semibold tracking-tight mt-1">Run your entire tech chapter from one place.</h2>
-                <p className="text-[14px] text-muted-foreground mt-3 leading-relaxed">
-                  Create your chapter, onboard students, host hackathons and workshops, issue bounties,
-                  track progress, and manage everything through the admin command center.
-                </p>
-                <div className="mt-6 space-y-3">
-                  {[
-                    "Full admin dashboard with analytics & user management",
-                    "Custom hackathon & competition orchestration",
-                    "Newsletter broadcasts & event registration",
-                    "Chapter leaderboard & reputation tracking",
-                  ].map((item) => (
-                    <div key={item} className="flex items-start gap-2.5 text-[13px] text-foreground/80">
-                      <div className="h-5 w-5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                        <svg className="h-3 w-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      {item}
-                    </div>
-                  ))}
-                </div>
-                <Link to="/chapters" className="inline-flex items-center gap-2 mt-8 text-[13px] font-medium text-primary hover:text-primary/80 transition-colors group">
-                  Explore chapters <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </div>
-            </Reveal>
-
-            <Reveal delay={150}>
-              <div className="bg-card border border-border rounded-lg p-6 space-y-4">
-                {[
-                  { label: "Active members", value: "2,841", bar: 78, color: "bg-primary" },
-                  { label: "Hackathons hosted", value: "186", bar: 62, color: "bg-amber-500" },
-                  { label: "Bounties completed", value: "4,219", bar: 88, color: "bg-emerald-500" },
-                  { label: "Workshops run", value: "94", bar: 45, color: "bg-violet-500" },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <div className="flex items-center justify-between text-[12px] mb-1.5">
-                      <span className="text-muted-foreground">{s.label}</span>
-                      <span className="font-semibold text-foreground">{s.value}</span>
-                    </div>
-                    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                      <div className={cn("h-full rounded-full transition-all duration-1000", s.color)} style={{ width: `${s.bar}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
           </div>
         </div>
       </section>

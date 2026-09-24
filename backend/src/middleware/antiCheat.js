@@ -74,6 +74,6 @@ export const entropyAudit = async (req, res, next) => {
         await team.save();
         next();
     } catch (err) {
-        next();
+        return res.status(500).json({ message: 'Submission validation failed' });
     }
 };

@@ -30,7 +30,7 @@ export function useSecurityEnforcement(hackathonId: string, active = false) {
     }
 
     toast.error(`SECURITY BREACH: ${type.replace(/_/g, ' ')}`, {
-      description: `Strike ${strikes + 1} of 3 recorded. Further violations will result in mission termination.`,
+      description: `Strike ${strikes + 1} of 6 recorded. Further violations will result in mission termination.`,
       duration: 5000,
     });
   }, [addViolation, hackathonId, strikes, socket]);

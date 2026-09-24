@@ -20,27 +20,21 @@ function getRoleCategory(role) {
   return 'Student';
 }
 import { saveProctorSnapshot } from '../utils/hackathonUtils.js';
+import { getRedis } from '../utils/redis.js';
 
 const router = express.Router();
 
-// Simple in-memory rate limiter for snapshot uploads (keyed by userId)
-const snapshotRateMap = new Map();
-const SNAPSHOT_WINDOW_MS = parseInt(process.env.SNAPSHOT_INTERVAL_MS || '10000', 10);
-setInterval(() => {
-    const cutoff = Date.now() - SNAPSHOT_WINDOW_MS * 2;
-    for (const [key, ts] of snapshotRateMap) {
-        if (ts < cutoff) snapshotRateMap.delete(key);
-    }
-}, 60000);
-function snapshotRateLimit(req, res, next) {
+const SNAPSHOT_WINDOW_SEC = Math.ceil(parseInt(process.env.SNAPSHOT_INTERVAL_MS || '10000', 10) / 1000);
+async function snapshotRateLimit(req, res, next) {
     const key = req.user?._id?.toString();
     if (!key) return next();
-    const now = Date.now();
-    const last = snapshotRateMap.get(key);
-    if (last && now - last < SNAPSHOT_WINDOW_MS) {
+    const redisKey = `snapshot:rate:${key}`;
+    const redis = getRedis();
+    const exists = await redis.exists(redisKey);
+    if (exists) {
         return res.status(429).json({ message: 'Snapshot rate limit exceeded. Please wait before sending another.' });
     }
-    snapshotRateMap.set(key, now);
+    await redis.set(redisKey, '1', 'EX', SNAPSHOT_WINDOW_SEC);
     next();
 }
 
@@ -96,12 +90,13 @@ router.post('/', protect, isAdmin, async (req, res) => {
 // @access  Admin
 router.patch('/:id', protect, isAdmin, async (req, res) => {
   try {
-    // Prevent mass assignment of complex subdocuments and arrays
-    const updateData = { ...req.body };
-    delete updateData._id;
-    delete updateData.teams;
-    delete updateData.rounds;
-    delete updateData.questions;
+    const allowed = ['title', 'description', 'shortDescription', 'bannerImage', 'startDate',
+      'endDate', 'registrationDeadline', 'mode', 'venue', 'maxTeamSize', 'minTeamSize',
+      'maxParticipants', 'prizes', 'rules', 'themes', 'judgingCriteria', 'schedule',
+      'resources', 'sponsors', 'faqs', 'isPublished', 'tags', 'type', 'subCategory',
+      'status', 'slug', 'chapterScope', 'maxTeams'];
+    const updateData = {};
+    allowed.forEach(k => { if (req.body[k] !== undefined) updateData[k] = req.body[k]; });
 
     const hackathon = await Hackathon.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!hackathon) return res.status(404).json({ message: 'Hackathon not found' });
@@ -555,14 +550,8 @@ router.get('/:id/team-status', protect, async (req, res) => {
         .populate('hackathonId', 'slug');
 
         if (!team) {
-            const hasAnyTeam = await HackathonTeam.findOne({ members: req.user._id });
-            return res.status(404).json({ 
-                message: `No squadron registration found for mission context [${hId}].`,
-                debug: {
-                    userId: req.user._id,
-                    hackathonId: hId,
-                    hasTeamsInOtherMissions: !!hasAnyTeam
-                }
+            return res.status(404).json({
+                message: 'No squadron registration found for this mission context.'
             });
         }
 
@@ -1312,6 +1301,9 @@ router.get('/:id/round-debrief/:roundNumber', protect, async (req, res) => {
 router.post('/:id/proctor/snapshot', protect, snapshotRateLimit, async (req, res) => {
     try {
         const { imageData, roundNumber } = req.body;
+        if (!imageData || typeof imageData !== 'string' || imageData.length > 700000) {
+            return res.status(400).json({ message: 'Invalid or oversized snapshot' });
+        }
         const hId = await resolveHackathonId(req.params.id);
         if (!hId) return res.status(404).json({ message: 'Mission context not found.' });
         
@@ -2094,15 +2086,7 @@ router.post('/:id/submit-offline-deliverable', protect, async (req, res) => {
     }
 });
 
-// Rate limiter for contest submissions (1 per 10 seconds per user)
-const contestSubmitRateMap = new Map();
-const CONTEST_SUBMIT_COOLDOWN_MS = 10000;
-setInterval(() => {
-    const cutoff = Date.now() - CONTEST_SUBMIT_COOLDOWN_MS * 2;
-    for (const [key, ts] of contestSubmitRateMap) {
-        if (ts < cutoff) contestSubmitRateMap.delete(key);
-    }
-}, 60000);
+const CONTEST_SUBMIT_COOLDOWN_SEC = 10;
 
 // === ROUND SUBMISSION ROUTES (Phase 2: BuildX, DataStrom) ===
 
@@ -2331,15 +2315,15 @@ router.post('/:id/rounds/:roundNumber/contest-submit', protect, async (req, res)
             return res.status(400).json({ message: 'Code, language, and challengeId are required.' });
         }
 
-        // Rate limit
-        const rateLimitKey = req.user._id.toString();
-        const now = Date.now();
-        const lastSubmit = contestSubmitRateMap.get(rateLimitKey);
-        if (lastSubmit && now - lastSubmit < CONTEST_SUBMIT_COOLDOWN_MS) {
-            const waitSec = Math.ceil((CONTEST_SUBMIT_COOLDOWN_MS - (now - lastSubmit)) / 1000);
-            return res.status(429).json({ message: `Please wait ${waitSec}s before submitting again.` });
+        // Rate limit via Redis
+        const redisRateKey = `submit:rate:${req.user._id}`;
+        const redisClient = getRedis();
+        const alreadySubmitted = await redisClient.exists(redisRateKey);
+        if (alreadySubmitted) {
+            const ttl = await redisClient.ttl(redisRateKey);
+            return res.status(429).json({ message: `Please wait ${ttl > 0 ? ttl : CONTEST_SUBMIT_COOLDOWN_SEC}s before submitting again.` });
         }
-        contestSubmitRateMap.set(rateLimitKey, now);
+        await redisClient.set(redisRateKey, '1', 'EX', CONTEST_SUBMIT_COOLDOWN_SEC);
 
         const hId = await resolveHackathonId(req.params.id);
         if (!hId) return res.status(404).json({ message: 'Hackathon not found.' });

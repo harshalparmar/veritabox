@@ -10,8 +10,12 @@ import { sendWelcomeEmail, sendOTPEmail } from '../utils/email.js';
 import NewsletterSubscriber from '../models/NewsletterSubscriber.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { safeEqual, isOtpLocked, registerOtpFailure, clearOtpFailures, OTP_LOCK_MINUTES } from '../utils/otpSecurity.js';
+import { hashOtp } from '../utils/security.js';
 
 const authLimiter = rateLimit({ windowMs: 15 * 60_000, max: 20, message: 'Too many authentication attempts. Try again in 15 minutes.' });
+
+// Primary frontend origin for OAuth redirect URIs (first entry from the comma-separated FRONTEND_URL)
+const PRIMARY_ORIGIN = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
 const otpLimiter = rateLimit({ windowMs: 15 * 60_000, max: 8, message: 'Too many OTP attempts. Try again in 15 minutes.' });
 
 const router = express.Router();
@@ -61,11 +65,11 @@ async function updateStreak(userId, currentStreak, longestStreak, lastLoginDate)
 }
 
 // Password complexity regex (Min 8 chars, 1 letter, 1 number, 1 special character)
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn: '7d',
   });
 };
 
@@ -74,7 +78,7 @@ router.post('/register', authLimiter, async (req, res) => {
     const { name, email, password, universityId } = req.body;
 
     if (!passwordRegex.test(password)) {
-      return res.status(400).json({ message: 'Password must be at least 8 characters long, contain a number and a special character (@$!%*#?&).' });
+      return res.status(400).json({ message: 'Password must be at least 8 characters with an uppercase letter, a lowercase letter, a number, and a special character.' });
     }
 
     const userExists = await User.findOne({ 
@@ -119,7 +123,7 @@ router.post('/register', authLimiter, async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -237,7 +241,7 @@ router.post('/login', authLimiter, async (req, res) => {
       res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -343,7 +347,7 @@ router.post('/google', authLimiter, async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    res.status(500).json({ message: 'Google Auth Error: ' + error.message });
+    res.status(500).json({ message: 'Authentication failed' });
   }
 });
 
@@ -364,7 +368,7 @@ router.post('/github', authLimiter, async (req, res) => {
         client_id: process.env.GITHUB_CLIENT_ID,
         client_secret: process.env.GITHUB_CLIENT_SECRET,
         code,
-        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth`,
+        redirect_uri: `${PRIMARY_ORIGIN}/auth`,
       }),
     });
 
@@ -485,7 +489,7 @@ router.post('/github', authLimiter, async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    res.status(500).json({ message: 'GitHub Auth Error: ' + error.message });
+    res.status(500).json({ message: 'Authentication failed' });
   }
 });
 
@@ -507,7 +511,7 @@ router.post('/microsoft', authLimiter, async (req, res) => {
         client_secret: process.env.MICROSOFT_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth`,
+        redirect_uri: `${PRIMARY_ORIGIN}/auth`,
       }).toString(),
     });
 
@@ -527,7 +531,7 @@ router.post('/microsoft', authLimiter, async (req, res) => {
     const msUser = await userResponse.json();
 
     if (msUser.error) {
-      return res.status(401).json({ message: 'Microsoft Graph API failed: ' + msUser.error.message });
+      return res.status(401).json({ message: 'Authentication failed' });
     }
 
     const email = msUser.mail || msUser.userPrincipalName;
@@ -613,7 +617,7 @@ router.post('/microsoft', authLimiter, async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    res.status(500).json({ message: 'Microsoft Auth Error: ' + error.message });
+    res.status(500).json({ message: 'Authentication failed' });
   }
 });
 
@@ -633,7 +637,7 @@ router.post('/linkedin', authLimiter, async (req, res) => {
         code,
         client_id: process.env.LINKEDIN_CLIENT_ID,
         client_secret: process.env.LINKEDIN_CLIENT_SECRET,
-        redirect_uri: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth`,
+        redirect_uri: `${PRIMARY_ORIGIN}/auth`,
       }).toString(),
     });
 
@@ -731,7 +735,7 @@ router.post('/linkedin', authLimiter, async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    res.status(500).json({ message: 'LinkedIn Auth Error: ' + error.message });
+    res.status(500).json({ message: 'Authentication failed' });
   }
 });
 
@@ -741,7 +745,7 @@ router.post('/verify-totp', otpLimiter, async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(401).json({ message: 'Invalid authentication' });
     }
 
     const lock = isOtpLocked(user);
@@ -749,19 +753,29 @@ router.post('/verify-totp', otpLimiter, async (req, res) => {
       return res.status(429).json({ message: `Too many failed attempts. Try again in ${Math.ceil(lock.retryAfterMs / 60000)} minutes.` });
     }
 
+    // Decrypt TOTP secret for verification (try-catch for backward compat)
+    let totpSecret = user.twoFactorSecret;
+    try {
+      const { decrypt } = await import('../utils/security.js');
+      totpSecret = decrypt(user.twoFactorSecret);
+    } catch (e) {
+      // Fall back to plaintext if decryption fails (legacy secret)
+    }
+
     // Verify TOTP token
     const verified = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: totpSecret,
       encoding: 'base32',
       token: token
     });
 
-    // Check backup codes if TOTP fails (constant-time compare)
+    // Check backup codes if TOTP fails (codes stored hashed)
     let isBackupCode = false;
-    if (!verified && user.twoFactorBackupCodes.some(c => safeEqual(c, String(token || '')))) {
+    const hashedToken = hashOtp(String(token || ''));
+    if (!verified && user.twoFactorBackupCodes.some(c => safeEqual(c, hashedToken))) {
       isBackupCode = true;
       // Remove used backup code
-      user.twoFactorBackupCodes = user.twoFactorBackupCodes.filter(c => !safeEqual(c, String(token || '')));
+      user.twoFactorBackupCodes = user.twoFactorBackupCodes.filter(c => !safeEqual(c, hashedToken));
       await user.save();
     }
 
@@ -809,7 +823,7 @@ router.post('/verify-totp', otpLimiter, async (req, res) => {
       res.status(401).json({ message: 'Invalid authentication code' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Verification error: ' + error.message });
+    res.status(500).json({ message: 'Authentication failed' });
   }
 });
 
@@ -837,7 +851,7 @@ router.post('/request-otp-login', otpLimiter, async (req, res) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    user.loginOtp = otp;
+    user.loginOtp = hashOtp(otp);
     user.loginOtpExpires = expires;
     await user.save();
 
@@ -845,7 +859,7 @@ router.post('/request-otp-login', otpLimiter, async (req, res) => {
 
     res.json({ message: 'OTP sent to your email' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to request OTP: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -866,7 +880,7 @@ router.post('/verify-otp-login', otpLimiter, async (req, res) => {
     }
 
     const expired = !user.loginOtpExpires || user.loginOtpExpires < new Date();
-    const matches = user.loginOtp && safeEqual(user.loginOtp, String(otp || ''));
+    const matches = user.loginOtp && safeEqual(user.loginOtp, hashOtp(String(otp || '')));
     if (!matches || expired) {
       const result = registerOtpFailure(user);
       await user.save();
@@ -923,7 +937,7 @@ router.post('/verify-otp-login', otpLimiter, async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to verify OTP: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -952,7 +966,7 @@ router.post('/forgot-password', otpLimiter, async (req, res) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    user.resetPasswordOtp = otp;
+    user.resetPasswordOtp = hashOtp(otp);
     user.resetPasswordExpires = expires;
     await user.save();
 
@@ -960,7 +974,7 @@ router.post('/forgot-password', otpLimiter, async (req, res) => {
 
     res.json({ message: 'Password reset code sent to your email' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to process forgot password: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -969,7 +983,7 @@ router.post('/reset-password', otpLimiter, async (req, res) => {
     const { email, otp, newPassword } = req.body;
 
     if (!passwordRegex.test(newPassword)) {
-      return res.status(400).json({ message: 'Password must be at least 8 characters long, contain a number and a special character (@$!%*#?&).' });
+      return res.status(400).json({ message: 'Password must be at least 8 characters with an uppercase letter, a lowercase letter, a number, and a special character.' });
     }
 
     const user = await User.findOne({ 
@@ -986,7 +1000,7 @@ router.post('/reset-password', otpLimiter, async (req, res) => {
     }
 
     const expired = !user.resetPasswordExpires || user.resetPasswordExpires < new Date();
-    const matches = user.resetPasswordOtp && safeEqual(user.resetPasswordOtp, String(otp || ''));
+    const matches = user.resetPasswordOtp && safeEqual(user.resetPasswordOtp, hashOtp(String(otp || '')));
     if (!matches || expired) {
       const result = registerOtpFailure(user);
       await user.save();
@@ -1005,7 +1019,7 @@ router.post('/reset-password', otpLimiter, async (req, res) => {
 
     res.json({ message: 'Password has been successfully reset' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to reset password: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. REDIS (Platform-Wide)
+  # Used for caching, rate-limiting, and 
+  # real-time Socket.io pub/sub synchronization 
+  # for the entire VeritaBox platform.
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: veritabox_redis
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+    volumes:
+      - redis_data:/data
+    networks:
+      - veritabox_network
+
+  # ==========================================
+  # 2. PISTON (CodeForge Execution Engine)
+  # A simpler, Docker Desktop-friendly code execution engine.
+  # Replaces Judge0.
+  # ==========================================
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: veritabox_piston
+    restart: always
+    ports:
+      - "127.0.0.1:2000:2000"
+    environment:
+      - PISTON_DISABLE_NETWORKING=true
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - piston_data:/piston/packages
+    networks:
+      - veritabox_network
+
+  # ==========================================
+  # 3. MONGODB (Platform-Wide)
+  # Stores all platform data: users, hackathons, 
+  # leaderboards, submissions, etc.
+  # ==========================================
+  mongodb:
+    image: mongo:8
+    container_name: veritabox_mongo
+    restart: always
+    ports:
+      - "127.0.0.1:27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?MONGO_USER must be set}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD must be set}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - veritabox_network
+
+networks:
+  veritabox_network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  mongodb_data:
+  piston_data:

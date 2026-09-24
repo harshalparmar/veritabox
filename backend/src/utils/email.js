@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "url";
 import { fileURLToPath } from "url";
 import pathModule from "path";
+import { htmlEscape } from "./security.js";
 
 dotenv.config();
 
@@ -46,8 +47,8 @@ export const sendWelcomeEmail = async (email, name) => {
     let html = fs.readFileSync(templatePath, "utf8");
 
     html = html
-      .replace(/{{name}}/g, name)
-      .replace(/{{email}}/g, email)
+      .replace(/{{name}}/g, htmlEscape(name))
+      .replace(/{{email}}/g, htmlEscape(email))
       .replace(/{{year}}/g, new Date().getFullYear().toString());
 
     await plunk.emails.send({
@@ -93,7 +94,7 @@ export const sendOTPEmail = async (email, otp) => {
     });
     
     if (result.success) {
-      console.log(`[Plunk] OTP email (${otp}) dispatched to ${email}`);
+      console.log(`[Plunk] OTP email dispatched to ${email}`);
     } else {
       console.error(`[Plunk] API returned failure for ${email}:`, result);
     }
@@ -158,17 +159,18 @@ export const sendEventRegistrationEmail = async (email, name, event, ticketToken
   }
 
   try {
-    const idCardUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/events/${event._id}/id-card/${ticketToken}`;
+    const primaryOrigin = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
+    const idCardUrl = `${primaryOrigin}/events/${event._id}/id-card/${ticketToken}`;
     const eventDate = event.eventDate ? new Date(event.eventDate).toLocaleString() : 'TBA';
     
     let html = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #fff; background-color: #000; padding: 20px; border-radius: 8px;">
-        <h2 style="color: #4ade80;">Registration Confirmed: ${event.title}</h2>
-        <p>Hi ${name},</p>
-        <p>You have successfully registered for <strong>${event.title}</strong>.</p>
+        <h2 style="color: #4ade80;">Registration Confirmed: ${htmlEscape(event.title)}</h2>
+        <p>Hi ${htmlEscape(name)},</p>
+        <p>You have successfully registered for <strong>${htmlEscape(event.title)}</strong>.</p>
         <div style="background-color: #111; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #333;">
-          <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${eventDate}</p>
-          <p style="margin: 5px 0;"><strong>Location:</strong> ${event.location || 'TBA'}</p>
+          <p style="margin: 5px 0;"><strong>Date &amp; Time:</strong> ${eventDate}</p>
+          <p style="margin: 5px 0;"><strong>Location:</strong> ${htmlEscape(event.location || 'TBA')}</p>
         </div>
         <p>Please present your digital ID card at the venue.</p>
         <a href="${idCardUrl}" style="display: inline-block; background-color: #4ade80; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 10px;">View Digital ID Card</a>

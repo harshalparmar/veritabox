@@ -90,10 +90,19 @@ router.get('/admin/:id/abstracts', protect, isAdmin, async (req, res) => {
 router.put('/admin/:id/abstracts/:registrationId', protect, isAdmin, async (req, res) => {
   try {
     const { status, rubricScores } = req.body;
-    const registration = await CompetitionRegistration.findById(req.params.registrationId);
+    const registration = await CompetitionRegistration.findOne({
+      _id: req.params.registrationId,
+      competitionId: req.params.id
+    });
     if (!registration) return res.status(404).json({ message: 'Registration not found' });
 
-    if (status) registration.abstract.status = status;
+    if (status) {
+      const validStatuses = ['Pending', 'UnderReview', 'Shortlisted', 'Rejected'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: 'Invalid abstract status.' });
+      }
+      registration.abstract.status = status;
+    }
 
     if (rubricScores && Array.isArray(rubricScores)) {
       const competition = await Competition.findById(req.params.id);

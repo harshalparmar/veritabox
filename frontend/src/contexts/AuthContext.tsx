@@ -186,6 +186,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signOut = () => {
+    // Fire-and-forget server-side logout to invalidate cached session
+    if (token) {
+      fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
     removeToken();
     setUser(null);
     setTokenState(null);

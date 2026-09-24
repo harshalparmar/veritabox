@@ -7,32 +7,35 @@ import SAAuditLog from '../models/SAAuditLog.js';
  * Verifies SA_JWT_SECRET and checks against the super_admins collection.
  */
 export const protectSA = async (req, res, next) => {
+  // IP allowlist check
+  if (process.env.SA_IP_ALLOWLIST) {
+    const allowed = process.env.SA_IP_ALLOWLIST.split(',').map(ip => ip.trim());
+    if (!allowed.includes(req.ip)) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+  }
+
   let token;
 
-  // discovery protection: if IP is not in allowlist, return 404
-  // (In production, process.env.SA_IP_ALLOWLIST would be used)
-  
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.SA_JWT_SECRET);
 
       req.sa = await SuperAdmin.findById(decoded.id).select('-password');
-      
+
       if (!req.sa || req.sa.isLocked) {
-         // Discovery protection: return 404 even if token exists but account is locked/deleted
          return res.status(404).json({ message: 'Not Found' });
       }
 
-      next();
+      return next();
     } catch (error) {
-      // Discovery protection: return 404 for invalid tokens
-      res.status(404).json({ message: 'Not Found' });
+      return res.status(404).json({ message: 'Not Found' });
     }
   }
 
   if (!token) {
-    res.status(404).json({ message: 'Not Found' });
+    return res.status(404).json({ message: 'Not Found' });
   }
 };
 
@@ -63,6 +66,6 @@ export const saAudit = (action) => async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Audit Log Error:', error);
-    next(); // Don't block the request if auditing fails, but log it
+    return res.status(500).json({ message: 'Internal server error: audit logging failed' });
   }
 };

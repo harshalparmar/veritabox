@@ -53,7 +53,7 @@ router.get('/', async (req, res) => {
     const workshops = await Workshop.find(query)
       .populate('chapter', 'name slug logoUrl')
       .populate('mentor', 'name avatarUrl')
-      .populate('attendees', 'name username avatarUrl email')
+      .populate('attendees', 'name username avatarUrl')
       .sort({ date: 1 });
 
     res.json(workshops);
@@ -72,7 +72,7 @@ router.get('/pending/all', protect, isAdmin, async (req, res) => {
     const workshops = await Workshop.find({ status: 'Pending' })
       .populate('chapter', 'name slug logoUrl')
       .populate('mentor', 'name avatarUrl')
-      .populate('attendees', 'name username avatarUrl email')
+      .populate('attendees', 'name username avatarUrl')
       .sort({ createdAt: -1 });
     res.json(workshops);
   } catch (error) {
@@ -219,16 +219,17 @@ router.put('/:id', protect, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Only chapter leads or admins can update workshops.' });
     }
 
-    const updates = { ...req.body };
-    delete updates._id;
-    delete updates.chapter;
-    delete updates.registeredUsers;
-    delete updates.checkedInUsers;
-    delete updates.reputationAwarded;
+    const allowedFields = ['title', 'description', 'date', 'endDate', 'venue', 'location',
+      'type', 'capacity', 'mentor', 'externalMentor', 'duration', 'prerequisites', 'materials',
+      'resources', 'image', 'coverUrl', 'tags', 'isPublished', 'meetingLink', 'xpReward'];
+    const updates = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
 
     // Leads cannot override the status to bypass approval
-    if (updates.status && req.user.role !== 'Admin') {
-      delete updates.status;
+    if (req.body.status && req.user.role === 'Admin') {
+      updates.status = req.body.status;
     }
 
     if (updates.title && updates.title !== workshop.title) {

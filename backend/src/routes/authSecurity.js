@@ -7,6 +7,13 @@ import User from '../models/User.js';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { sendOTPEmail } from '../utils/email.js';
+import { rateLimit } from '../middleware/rateLimit.js';
+
+const PRIMARY_ORIGIN = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
+import { safeEqual } from '../utils/otpSecurity.js';
+import { hashOtp, generateSecureCode, encrypt, decrypt } from '../utils/security.js';
+
+const lost2faLimiter = rateLimit({ windowMs: 15 * 60_000, max: 5, message: 'Too many attempts. Try again in 15 minutes.' });
 
 const router = express.Router();
 
@@ -24,7 +31,12 @@ router.post('/2fa/setup', protect, async (req, res) => {
       name: `VeritaBox:${user.universityId}`,
     });
 
-    user.twoFactorSecret = secret.base32;
+    try {
+      user.twoFactorSecret = encrypt(secret.base32);
+    } catch (e) {
+      // Fall back to plaintext if ENCRYPTION_KEY is not set
+      user.twoFactorSecret = secret.base32;
+    }
     await user.save();
 
     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
@@ -34,7 +46,7 @@ router.post('/2fa/setup', protect, async (req, res) => {
       qrCodeUrl,
     });
   } catch (error) {
-    res.status(500).json({ message: '2FA setup failure: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -50,24 +62,32 @@ router.post('/2fa/verify', protect, async (req, res) => {
       return res.status(400).json({ message: '2FA setup not initiated' });
     }
 
+    // Decrypt TOTP secret for verification (try-catch for backward compat)
+    let totpSecret = user.twoFactorSecret;
+    try {
+      totpSecret = decrypt(user.twoFactorSecret);
+    } catch (e) {
+      // Fall back to plaintext if decryption fails (legacy secret)
+    }
+
     const verified = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: totpSecret,
       encoding: 'base32',
       token,
     });
 
     if (verified) {
       user.isTwoFactorEnabled = true;
-      // Generate backup codes
-      const backupCodes = Array.from({ length: 8 }, () => Math.random().toString(36).substr(2, 8).toUpperCase());
-      user.twoFactorBackupCodes = backupCodes;
+      // Generate backup codes using crypto
+      const backupCodes = Array.from({ length: 8 }, () => generateSecureCode(8).toUpperCase());
+      user.twoFactorBackupCodes = backupCodes.map(c => hashOtp(c));
       await user.save();
       res.json({ message: '2FA enabled successfully', backupCodes });
     } else {
       res.status(400).json({ message: 'Invalid verification token' });
     }
   } catch (error) {
-    res.status(500).json({ message: '2FA verification failure: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -89,9 +109,17 @@ router.post('/2fa/disable', protect, async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
+    // Decrypt TOTP secret for verification (try-catch for backward compat)
+    let totpSecret = user.twoFactorSecret;
+    try {
+      totpSecret = decrypt(user.twoFactorSecret);
+    } catch (e) {
+      // Fall back to plaintext if decryption fails (legacy secret)
+    }
+
     // Verify TOTP token
     const verified = speakeasy.totp.verify({
-      secret: user.twoFactorSecret,
+      secret: totpSecret,
       encoding: 'base32',
       token,
     });
@@ -106,7 +134,7 @@ router.post('/2fa/disable', protect, async (req, res) => {
       res.status(400).json({ message: 'Invalid verification token' });
     }
   } catch (error) {
-    res.status(500).json({ message: '2FA disable failure: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -159,7 +187,7 @@ router.post('/social/link/github', protect, async (req, res) => {
     await user.save();
     res.json({ message: 'GitHub linked successfully', socialProviders: user.socialProviders });
   } catch (error) {
-    res.status(500).json({ message: 'GitHub linking failure: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -178,7 +206,7 @@ router.post('/social/link/microsoft', protect, async (req, res) => {
         client_secret: process.env.MICROSOFT_CLIENT_SECRET,
         code,
         grant_type: 'authorization_code',
-        redirect_uri: req.headers.origin ? `${req.headers.origin}/auth` : 'http://localhost:5173/auth'
+        redirect_uri: `${PRIMARY_ORIGIN}/auth`
       }).toString(),
     });
 
@@ -213,7 +241,7 @@ router.post('/social/link/microsoft', protect, async (req, res) => {
     await user.save();
     res.json({ message: 'Microsoft linked successfully', socialProviders: user.socialProviders });
   } catch (error) {
-    res.status(500).json({ message: 'Microsoft linking failure: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -233,7 +261,9 @@ router.post('/social/link/google', protect, async (req, res) => {
       });
       payload = ticket.getPayload();
     } else if (accessToken) {
-      const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`);
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       payload = await response.json();
     }
 
@@ -261,7 +291,7 @@ router.post('/social/link/google', protect, async (req, res) => {
     await user.save();
     res.json({ message: 'Google linked successfully', socialProviders: user.socialProviders });
   } catch (error) {
-    res.status(500).json({ message: 'Google linking failure: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -280,7 +310,7 @@ router.post('/social/link/linkedin', protect, async (req, res) => {
         code,
         client_id: process.env.LINKEDIN_CLIENT_ID,
         client_secret: process.env.LINKEDIN_CLIENT_SECRET,
-        redirect_uri: req.headers.origin ? `${req.headers.origin}/auth` : 'http://localhost:5173/auth'
+        redirect_uri: `${PRIMARY_ORIGIN}/auth`
       }).toString(),
     });
 
@@ -315,7 +345,7 @@ router.post('/social/link/linkedin', protect, async (req, res) => {
     await user.save();
     res.json({ message: 'LinkedIn linked successfully', socialProviders: user.socialProviders });
   } catch (error) {
-    res.status(500).json({ message: 'LinkedIn linking failure: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -335,17 +365,17 @@ router.post('/social/unlink', protect, async (req, res) => {
             res.status(400).json({ message: 'Provider not linked' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Social unlinking failure: ' + error.message });
+        res.status(500).json({ message: 'Server error' });
     }
 });
 
 // @desc    Request Lost 2FA OTP
 // @route   POST /api/auth-security/2fa/lost-request
-// @access  Public
-router.post('/2fa/lost-request', async (req, res) => {
+// @access  Private (rate-limited)
+router.post('/2fa/lost-request', lost2faLimiter, protect, async (req, res) => {
   try {
-    const { userId, email } = req.body;
-    const user = await User.findById(userId);
+    const { email } = req.body;
+    const user = await User.findById(req.user._id);
 
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (!user.isTwoFactorEnabled) return res.status(400).json({ message: '2FA is not enabled' });
@@ -365,7 +395,7 @@ router.post('/2fa/lost-request', async (req, res) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    user.loginOtp = otp;
+    user.loginOtp = hashOtp(otp);
     user.loginOtpExpires = expires;
     await user.save();
 
@@ -373,21 +403,21 @@ router.post('/2fa/lost-request', async (req, res) => {
 
     res.json({ message: 'OTP sent to your email to bypass 2FA' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to request OTP: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
 // @desc    Verify Lost 2FA OTP & Disable 2FA
 // @route   POST /api/auth-security/2fa/lost-verify
-// @access  Public
-router.post('/2fa/lost-verify', async (req, res) => {
+// @access  Private (rate-limited)
+router.post('/2fa/lost-verify', lost2faLimiter, protect, async (req, res) => {
   try {
-    const { userId, otp } = req.body;
-    const user = await User.findById(userId);
+    const { otp } = req.body;
+    const user = await User.findById(req.user._id);
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (!user.loginOtp || user.loginOtp !== otp || user.loginOtpExpires < new Date()) {
+    if (!user.loginOtp || !safeEqual(user.loginOtp, hashOtp(String(otp || ''))) || user.loginOtpExpires < new Date()) {
       return res.status(401).json({ message: 'Invalid or expired OTP' });
     }
 
@@ -401,17 +431,17 @@ router.post('/2fa/lost-verify', async (req, res) => {
 
     const device = req.headers['user-agent'] || 'Unknown Device';
     const location = req.ip || 'Unknown IP';
-    
+
     await User.findByIdAndUpdate(user._id, {
-      $push: { 
-        loginHistory: { 
+      $push: {
+        loginHistory: {
           $each: [{ success: true, device, location, note: 'Disabled 2FA via OTP' }],
-          $slice: -50 
-        } 
+          $slice: -50
+        }
       }
     });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       _id: user._id,
@@ -430,7 +460,7 @@ router.post('/2fa/lost-verify', async (req, res) => {
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to verify OTP and disable 2FA: ' + error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

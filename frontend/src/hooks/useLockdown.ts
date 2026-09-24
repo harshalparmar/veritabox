@@ -1,5 +1,10 @@
 import { useEffect, useCallback, useState } from 'react';
 
+// SECURITY NOTE: This hook is a UI-level deterrent only. It blocks common
+// keyboard shortcuts and right-click but is trivially bypassed by DevTools,
+// browser extensions, or disabling JavaScript. Do not rely on it for
+// security-critical decisions. Server-side validation is the real boundary.
+
 export function useLockdown(active: boolean) {
   const [isFocusLost, setIsFocusLost] = useState(false);
 

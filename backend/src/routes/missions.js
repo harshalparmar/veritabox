@@ -5,6 +5,9 @@ import TestLog from '../models/TestLog.js';
 const router = express.Router();
 
 // GET /api/missions (Fetch all upcoming tests)
+// Intentionally public: the mission schedule acts as a shared calendar visible
+// to all users (including unauthenticated visitors) so they can see upcoming
+// testing blocks. Write operations (POST, PUT) require authentication.
 router.get('/', async (req, res) => {
   try {
     const activeMissions = await TestLog.find().populate('pilotOrLead', 'name').sort({ startTime: 1 });

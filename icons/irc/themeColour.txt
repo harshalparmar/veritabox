@@ -1,4 +1,0 @@
-black - rgb(23, 23, 23)
-white - rgb(230, 230, 230)
-blue - rgb(97, 108, 209)
-green - rgb(0, 255, 106)

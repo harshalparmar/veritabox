@@ -5,8 +5,9 @@ import BountySubmission from '../models/BountySubmission.js';
 import KnowledgeArticle from '../models/KnowledgeArticle.js';
 import User from '../models/User.js';
 import Signal from '../models/Signal.js';
+import { sanitizeUserContent } from '../utils/security.js';
 
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, isAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -126,9 +127,20 @@ router.post('/transmit', protect, async (req, res) => {
             return res.status(400).json({ message: 'Signal content or code is required' });
         }
 
+        // Validate attachment URLs if present
+        if (attachments && Array.isArray(attachments)) {
+            for (const url of attachments) {
+                if (typeof url === 'string' && !url.startsWith('http://') && !url.startsWith('https://')) {
+                    return res.status(400).json({ message: 'Attachment URLs must use http:// or https://' });
+                }
+            }
+        }
+
+        const sanitizedContent = content ? sanitizeUserContent(content) : '';
+
         const signal = await Signal.create({
             user: req.user._id,
-            content: content || '',
+            content: sanitizedContent,
             code,
             type: type || 'Broadcast',
             tags: tags || [],
@@ -186,7 +198,7 @@ router.put('/signal/:id', protect, async (req, res) => {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
-        signal.content = req.body.content !== undefined ? req.body.content : signal.content;
+        signal.content = req.body.content !== undefined ? sanitizeUserContent(req.body.content) : signal.content;
         signal.code = req.body.code !== undefined ? req.body.code : signal.code;
         signal.attachments = req.body.attachments !== undefined ? req.body.attachments : signal.attachments;
         signal.isEdited = true;
@@ -268,7 +280,7 @@ router.post('/signal/:id/comment', protect, async (req, res) => {
 
         const newComment = {
             user: req.user._id,
-            content: req.body.content
+            content: sanitizeUserContent(req.body.content)
         };
 
         signal.comments.push(newComment);
@@ -311,12 +323,8 @@ router.post('/signal/:id/comment', protect, async (req, res) => {
 
 // @desc    Get all signals for administration
 // @route   GET /api/feed/admin/signals
-router.get('/admin/signals', protect, async (req, res) => {
+router.get('/admin/signals', protect, isAdmin, async (req, res) => {
     try {
-        if (req.user.role !== 'Admin') {
-            return res.status(403).json({ message: 'Access denied: Administrative clearance required' });
-        }
-
         const signals = await Signal.find({})
             .populate('user', 'name avatarUrl role')
             .populate('chapterId', 'chapterName')

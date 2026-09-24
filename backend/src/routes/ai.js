@@ -49,109 +49,149 @@ const generateAIResponse = async (systemPrompt, userPrompt, options = {}) => {
   }
 };
 
-// POST /api/ai/chat - AI Mentor Chat
-router.post('/chat', protect, async (req, res) => {
+// Allowed pages for Dhriti chat — validated server-side
+const DHRITI_ALLOWED_PAGES = ['dashboard', 'roadmaps', 'checklist', 'progress'];
+
+// POST /api/ai/chat - Dhriti AI Mentor Chat
+router.post('/chat', protect, dhritiLimiter, async (req, res) => {
   try {
-    const { message } = req.body;
-    
-    // 1. Fetch Complete User Database
+    const { message, page, pageContext } = req.body;
+    if (!message || typeof message !== 'string' || message.length > 2000) {
+      return res.status(400).json({ message: 'Message is required (max 2000 chars).' });
+    }
+
+    if (page && !DHRITI_ALLOWED_PAGES.includes(page)) {
+      return res.status(403).json({ message: 'Dhriti is not available on this page.' });
+    }
+
     const user = await User.findById(req.user._id).select('-password');
     const progress = await ProgressRecord.findOne({ user: req.user._id });
     const roadmap = await Roadmap.findOne({ user: req.user._id });
     const { default: QuizProgress } = await import('../models/QuizProgress.js');
     const quizProgress = await QuizProgress.find({ user: req.user._id }).populate("quiz", "title topic");
-    
-    // Fetch today's checklist
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const checklist = await DailyChecklist.findOne({ user: req.user._id, date: { $gte: today } });
-    
-    // Fetch job applications
+
     const applications = await JobApplication.find({ candidate: req.user._id }).populate('job', 'title company');
-    
-    // Fetch complete platform activities
+
     const projects = await Project.find({ 'members.user': req.user._id }).select('title status');
     const hackathons = await HackathonRegistration.find({ user: req.user._id }).populate('hackathon', 'title');
     const bounties = await BountySubmission.find({ user: req.user._id }).populate('bounty', 'title');
     const repLogs = await ReputationLog.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(5);
     const codeForge = await ChallengeSubmission.find({ userId: req.user._id }).populate('challengeId', 'title difficulty').sort({ createdAt: -1 }).limit(3);
 
-    // 2. Format Context
-    const skillsContext = progress?.skills?.length ? progress.skills.map(s => `${s.skillName} (${s.proficiency}%)`).join(', ') : "No verified skills.";
-    const roadmapContext = roadmap ? `Goal: ${roadmap.careerGoal}. Active Phase: ${roadmap.phases[roadmap.activePhaseIndex]?.title || 'None'}. Completed: ${roadmap.isCompleted}` : "No roadmap.";
-    const checklistContext = checklist ? `${checklist.items.filter(i=>i.status==='Completed').length}/${checklist.items.length} tasks done today. Streak: ${checklist.streakCount}` : "No checklist today.";
-    const appsContext = applications.length ? applications.map(a => `${a.job.title} at ${a.job.company} (${a.status})`).join(', ') : "No job applications.";
-    
-    const activitiesContext = `
-      Projects: ${projects.length ? projects.map(p => `${p.title} (${p.status})`).join(', ') : 'None'}
-      Hackathons: ${hackathons.length ? hackathons.map(h => h.hackathon?.title).join(', ') : 'None'}
-      Bounties: ${bounties.length ? bounties.map(b => `${b.bounty?.title} (${b.status})`).join(', ') : 'None'}
-      Recent Rep Gains: ${repLogs.length ? repLogs.map(r => `+${r.points} (${r.reason})`).join(', ') : 'None'}
-      CodeForge (Recent): ${codeForge.length ? codeForge.map(c => `${c.challengeId?.title} [${c.language}] - ${c.status}`).join(' | ') : 'None'}
-    `;
+    const skillsContext = progress?.skills?.length ? progress.skills.map(s => `${s.skillName} (${s.proficiency}%)`).join(', ') : "No verified skills yet.";
+    const checklistContext = checklist
+      ? `Today: ${checklist.items.filter(i=>i.status==='Completed').length}/${checklist.items.length} tasks done. Streak: ${checklist.streakCount} days.
+Pending tasks: ${checklist.items.filter(i=>i.status!=='Completed').map(i=>`"${i.title}" (${i.taskType}, ${i.estimatedMinutes}min)`).slice(0,5).join(', ') || 'All done!'}`
+      : "No checklist generated today.";
+    const appsContext = applications.length ? applications.map(a => `${a.job?.title} at ${a.job?.company} (${a.status})`).join(', ') : "No job applications.";
+
+    const activitiesContext = [
+      `Projects: ${projects.length ? projects.map(p => `${p.title} (${p.status})`).join(', ') : 'None'}`,
+      `Hackathons: ${hackathons.length ? hackathons.map(h => h.hackathon?.title).filter(Boolean).join(', ') : 'None'}`,
+      `Bounties: ${bounties.length ? bounties.map(b => `${b.bounty?.title} (${b.status})`).join(', ') : 'None'}`,
+      `Recent XP: ${repLogs.length ? repLogs.map(r => `+${r.points} (${r.reason})`).join(', ') : 'None'}`,
+      `CodeForge: ${codeForge.length ? codeForge.map(c => `${c.challengeId?.title} [${c.language}] ${c.status}`).join(' | ') : 'None'}`,
+    ].join('\n');
 
     let quizContext = "None";
-    if (quizProgress && quizProgress.length > 0) {
-      quizContext = quizProgress.map(qp => 
-        `Quiz: ${qp.quiz?.title || 'Unknown'} (Topic: ${qp.quiz?.topic || 'Unknown'}) - Score: ${qp.highestPercentage}% - Status: ${qp.status}`
+    if (quizProgress?.length) {
+      quizContext = quizProgress.map(qp =>
+        `${qp.quiz?.title || '?'} (${qp.quiz?.topic || '?'}) — ${qp.highestPercentage}% — ${qp.status}`
       ).join(' | ');
     }
-    
-    // Construct System Prompt
-    const systemPrompt = `You are Dhriti, the elite AI Mentor of the VeritaBox Platform.
 
-    --- USER DATABASE RECORD ---
-    Name: ${user.name}
-    Role: ${user.role}
-    Career Goal: ${user.careerGoal || 'Not set'}
-    Reputation Points: ${user.reputationPoints || 0}
-    Roadmap Completion: ${roadmap ? roadmap.completionPercentage + '%' : 'None'}
-    Verified Skills: ${skillsContext}
-    Daily Execution: ${checklistContext}
-    Assessments & Quizzes: ${quizContext}
-    Job Pipeline: ${appsContext}
-    
-    --- PLATFORM ACTIVITIES ---
-    ${activitiesContext.trim()}
-    
-    --- VeritaBox PLATFORM GUIDE ---
-    You understand all VeritaBox platform features and can guide users to the right place:
-    - Roadmap: /roadmaps — Shows their career roadmap, phases, modules, topics and completion status
-    - Daily Checklist: /checklist — Today's learning tasks: Theory → Practical → Assessment
-    - Progress: /progress — Analytics of their learning, skills, assessment scores, streak
-    - Jobs: /jobs — Career opportunities matched to their skills; Apply button is functional
-    - Learning: /learning/topic/:id — Theory content, practice tasks, quiz assessments
-    - VeritaBox Pulse: visible on Dashboard — Platform announcements, events, workshops, hackathons
-    - CodeForge: /forge — Coding challenges
-    - Competitions & Hackathons: /competitions, /hackathons
-    - Chapters: /chapters — Community and collaboration
-    
-    --- BEHAVIORAL RULES (MUST FOLLOW) ---
-    
-    1. TOPIC-AWARE HINTS FIRST: If the user asks about a concept related to their current roadmap phase or topic, DO NOT immediately give the complete answer. Instead:
-       - First: Give a focused hint or clue
-       - Ask them to think about it or try it
-       - If they still need help, give another hint with a concrete example
-       - Only on explicit follow-up requests: provide the complete explanation
-    
-    2. TOPIC RELEVANCE: Only answer questions related to:
-       - Their current learning topics and roadmap
-       - Technical concepts in their career goal area  
-       - Career development and job search
-       - VeritaBox platform navigation and features
-       If the user asks about completely unrelated topics (recipes, politics, general trivia, etc.), politely decline and redirect them back to their learning journey.
-    
-    3. PERSONALIZATION: Always connect your answers back to their specific career goal: "${user.careerGoal || 'not yet set'}" and their current roadmap phase.
-    
-    4. ACCURACY: Do not hallucinate data that isn't in the user's profile. Do not invent resources, URLs, or course names.
-    
-    5. CONCISE: Keep responses focused and actionable. Avoid lengthy preambles.`;
-    
+    // Build detailed roadmap context
+    let roadmapDetail = "No roadmap generated yet.";
+    if (roadmap) {
+      const activePhase = roadmap.phases?.[roadmap.activePhaseIndex];
+      const activeModule = activePhase?.modules?.[roadmap.activeModuleIndex];
+      const upcomingTopics = activeModule?.topics
+        ?.filter(t => t.status !== 'Completed')
+        ?.slice(0, 5)
+        ?.map(t => `"${t.title}" (${t.type}, ${t.status})`) || [];
+      roadmapDetail = `Career Goal: ${roadmap.careerGoal}
+Overall: ${roadmap.completedTopics}/${roadmap.totalTopics} topics (${roadmap.progressPercentage || 0}%)
+Active Phase: ${activePhase?.title || 'None'} (Phase ${(roadmap.activePhaseIndex || 0) + 1}/${roadmap.phases?.length || 0})
+Active Module: ${activeModule?.title || 'None'}
+Upcoming Topics: ${upcomingTopics.length ? upcomingTopics.join(', ') : 'None — module complete'}
+Completed: ${roadmap.isCompleted ? 'Yes' : 'No'}`;
+    }
+
+    // Page-specific context sent by the frontend
+    const livePageContext = pageContext ? `\n--- LIVE PAGE DATA (what the user currently sees) ---\n${typeof pageContext === 'string' ? pageContext.slice(0, 3000) : JSON.stringify(pageContext).slice(0, 3000)}` : '';
+
+    const systemPrompt = `You are Dhriti — the AI study mentor built into the VeritaBox learning platform.
+You help students navigate their learning roadmap, daily tasks, skill progress, and career goals.
+You speak in a warm but direct tone. You use the student's name naturally.
+
+--- STUDENT PROFILE ---
+Name: ${user.name}
+Role: ${user.role}
+Career Goal: ${user.careerGoal || 'Not set yet'}
+Reputation: ${user.reputationPoints || 0} XP
+Skills: ${skillsContext}
+
+--- LEARNING ROADMAP ---
+${roadmapDetail}
+
+--- TODAY'S CHECKLIST ---
+${checklistContext}
+
+--- ASSESSMENTS ---
+${quizContext}
+
+--- CAREER & ACTIVITIES ---
+Jobs: ${appsContext}
+${activitiesContext}
+${livePageContext}
+
+--- CURRENT PAGE: ${page || 'unknown'} ---
+
+=== RULES YOU MUST FOLLOW ===
+
+1. NEVER SOLVE CODE OR GIVE DIRECT ANSWERS.
+   If the user asks you to write code, solve a problem, or give a direct answer to a question:
+   → Give a HINT or a guiding question instead
+   → Point them to the relevant concept in their roadmap
+   → Encourage them to try it themselves first
+   → Only after 2+ follow-ups from the same user on the same question, give a more detailed explanation (still not the complete solution)
+
+2. STRICTLY PLATFORM-ONLY.
+   You ONLY discuss topics related to:
+   • The user's learning roadmap, phases, modules, and topics
+   • Their daily checklist tasks and how to approach them
+   • Their skill progress, quiz scores, and assessments
+   • Career goals, job applications, and professional development
+   • VeritaBox platform features and navigation
+   • Technical concepts that are part of their current learning path
+
+   If the user asks about ANYTHING ELSE — cooking, movies, politics, general trivia, weather, jokes, personal advice, or any topic not directly related to their learning journey on VeritaBox — you MUST refuse politely:
+   "I'm your study mentor on VeritaBox — I can only help with your learning roadmap, checklist, progress, and career goals. What would you like to work on?"
+
+   DO NOT engage with off-topic requests even if they say "just this once" or "it's quick."
+
+3. PERSONALIZE every response using their actual data. Reference their career goal, current phase, today's pending tasks, or skill gaps when relevant.
+
+4. BE PROACTIVE on the current page:
+   - On /dashboard: summarize what needs attention today (pending tasks, streak, upcoming deadlines)
+   - On /roadmaps: help them understand their current phase and next steps
+   - On /checklist: help them plan which task to tackle next and how to approach it
+   - On /progress: help them interpret their skill data and identify gaps
+
+5. NEVER hallucinate. Only reference data, skills, topics, or resources from the context above. If you don't have the data, say so.
+
+6. Keep responses CONCISE — 2-4 sentences for simple questions, up to a short paragraph for explanations. Use markdown formatting for readability (bold, lists, code backticks for technical terms).`;
+
     const reply = await generateAIResponse(systemPrompt, message);
-    
+
     res.json({ reply });
   } catch (error) {
-    res.status(500).json({ message: 'Error in AI chat: ' + error.message });
+    console.error('Dhriti chat error:', error);
+    res.status(500).json({ message: 'Failed to get a response from Dhriti.' });
   }
 });
 

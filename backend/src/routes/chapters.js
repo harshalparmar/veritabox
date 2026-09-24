@@ -124,6 +124,12 @@ router.get('/applications/all', protect, isAdmin, async (req, res) => {
 router.patch('/applications/:id/review', protect, isAdmin, async (req, res) => {
   try {
     const { status, adminNote } = req.body;
+
+    const validStatuses = ['Approved', 'Rejected'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Must be Approved or Rejected.' });
+    }
+
     const application = await ChapterApplication.findById(req.params.id);
 
     if (!application) return res.status(404).json({ message: 'Application not found.' });
@@ -294,6 +300,12 @@ router.get('/:id/recruitment-queue', protect, async (req, res) => {
 router.patch('/recruitment/:appId/review', protect, async (req, res) => {
   try {
     const { status, adminNote } = req.body;
+
+    const validStatuses = ['Approved', 'Rejected'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Must be Approved or Rejected.' });
+    }
+
     const application = await ChapterMemberApplication.findById(req.params.appId);
     if (!application) return res.status(404).json({ message: 'Application not found' });
 
