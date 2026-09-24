@@ -1,15 +1,6 @@
-const JUDGE0_URL = process.env.JUDGE0_API_URL || 'http://localhost:2358';
-
-const LANGUAGE_IDS = {
-  'C++': 54,
-  'C': 50,
-  'Python': 71,
-  'JavaScript': 63,
-};
-
 const PISTON_URL = process.env.PISTON_URL || 'http://localhost:2000';
 
-async function executeJudge0(language, code, stdin) {
+async function executePiston(language, code, stdin) {
   // Map our language names to Piston aliases
   const pistonLangs = {
     'C++': { language: 'c++', version: '*' },
@@ -38,7 +29,7 @@ async function executeJudge0(language, code, stdin) {
 
   const result = await response.json();
   
-  // Map Piston response to Judge0 format so we don't break evaluateCode
+  // Map Piston response to the status format evaluateCode expects
   return {
     stdout: Buffer.from(result.run.stdout || '').toString('base64'),
     stderr: Buffer.from(result.run.stderr || '').toString('base64'),
@@ -126,7 +117,7 @@ async function evaluateCode(code, language, testCases = [], exampleInput = "", e
     const tc = allCases[i];
 
     try {
-      const data = await executeJudge0(language, code, tc.input);
+      const data = await executePiston(language, code, tc.input);
 
       const stdout = decodeBase64(data.stdout);
       const stderr = decodeBase64(data.stderr);
@@ -222,4 +213,4 @@ async function evaluateCode(code, language, testCases = [], exampleInput = "", e
   };
 }
 
-export { executeJudge0, sanitizeError, evaluateCode };
+export { executePiston, sanitizeError, evaluateCode };

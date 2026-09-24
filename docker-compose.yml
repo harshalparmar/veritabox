@@ -22,7 +22,7 @@ services:
   # ==========================================
   # 2. PISTON (CodeForge Execution Engine)
   # A simpler, Docker Desktop-friendly code execution engine.
-  # Replaces Judge0.
+  # Lightweight, Docker Desktop-friendly code runner.
   # ==========================================
   piston:
     image: ghcr.io/engineer-man/piston
