@@ -4,7 +4,7 @@ export function neonPatternId(color: string) {
 
 /**
  * Renders a hidden SVG element containing diagonal-line pattern definitions.
- * Place this anywhere in the component tree — pattern IDs are globally
+ * Place this anywhere in the component tree  -  pattern IDs are globally
  * accessible across all SVGs in the same document.
  */
 export function NeonPatternDefs({ colors }: { colors: string[] }) {

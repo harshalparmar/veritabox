@@ -21,6 +21,7 @@ interface Article {
   category: { name: string; slug: string };
   tags?: string[]; prerequisites?: string[];
   relatedArticles?: { _id: string; title: string; slug: string; difficulty?: string }[];
+  relatedChallenges?: { _id: string; title: string; difficulty: string; tags?: string[] }[];
   tableOfContents?: { id: string; text: string; level: number }[];
 }
 
@@ -30,6 +31,12 @@ const DIFF_MAP: Record<string, { variant: "success" | "warning" | "danger" }> = 
   Beginner: { variant: "success" },
   Intermediate: { variant: "warning" },
   Advanced: { variant: "danger" },
+};
+
+const FORGE_DIFF_MAP: Record<string, { variant: "success" | "warning" | "danger" }> = {
+  Rookie: { variant: "success" },
+  Operative: { variant: "warning" },
+  Elite: { variant: "danger" },
 };
 
 export default function PublishingReader() {
@@ -287,6 +294,30 @@ export default function PublishingReader() {
                           <div className="min-w-0">
                             <p className="text-[13px] font-medium truncate">{rel.title}</p>
                             <Pill variant={rDiff.variant} className="text-[8px] mt-0.5">{rel.difficulty || "Beginner"}</Pill>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground ml-auto shrink-0" />
+                        </Surface>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Practice Code (CodeForge challenges) */}
+            {article.relatedChallenges && article.relatedChallenges.length > 0 && (
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <p className="text-[12px] font-semibold uppercase tracking-wider text-foreground/80 mb-3">Practice Code</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {article.relatedChallenges.map(ch => {
+                    const cDiff = FORGE_DIFF_MAP[ch.difficulty] || FORGE_DIFF_MAP.Rookie;
+                    return (
+                      <Link key={ch._id} to={`/forge/${ch._id}`}>
+                        <Surface hover className="p-3 flex items-center gap-3">
+                          <Code2 className="w-4 h-4 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-medium truncate">{ch.title}</p>
+                            <Pill variant={cDiff.variant} className="text-[8px] mt-0.5">{ch.difficulty}</Pill>
                           </div>
                           <ArrowRight className="w-3.5 h-3.5 text-muted-foreground ml-auto shrink-0" />
                         </Surface>

@@ -260,11 +260,11 @@ export default function Profile() {
   return (
     <PublicShell>
       {/* Centered Main Profile Container (LinkedIn-style Layout) */}
-      <div className="mx-auto max-w-5xl px-8 pt-6 pb-16">
+      <div className="mx-auto max-w-5xl px-4 md:px-8 pt-4 md:pt-6 pb-16">
         {/* Main Header Card */}
         <div className="bg-card border border-border/60 rounded-xl overflow-hidden shadow-xs mb-6">
           {/* Cover Photo */}
-          <div className="w-full h-[150px] sm:h-[180px] bg-secondary/30 relative overflow-hidden">
+          <div className="w-full h-[120px] sm:h-[150px] md:h-[180px] bg-secondary/30 relative overflow-hidden">
             {profile.coverPhotoUrl ? (
               <img src={resolveAssetUrl(profile.coverPhotoUrl)} className="w-full h-full object-cover" />
             ) : (
@@ -273,11 +273,11 @@ export default function Profile() {
           </div>
 
           {/* Profile Details & Avatar Overlap - inside the card with padding */}
-          <div className="px-6 pb-6 pt-4">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 relative z-10">
-              <div className="flex flex-col md:flex-row md:items-start gap-6">
-                <div className="-mt-12 sm:-mt-16 relative group shrink-0">
-                  <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-2xl bg-card border-4 border-card shadow-2xl flex items-center justify-center text-3xl sm:text-[48px] font-bold text-primary overflow-hidden transition-transform group-hover:scale-[1.02]">
+          <div className="px-4 md:px-6 pb-5 md:pb-6 pt-3 md:pt-4">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 relative z-10">
+              <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+                <div className="-mt-10 sm:-mt-12 md:-mt-16 relative group shrink-0 self-start md:self-auto">
+                  <div className="h-20 w-20 sm:h-24 sm:w-24 md:h-32 md:w-32 rounded-2xl bg-card border-4 border-card shadow-2xl flex items-center justify-center text-3xl sm:text-[48px] font-bold text-primary overflow-hidden transition-transform group-hover:scale-[1.02]">
                     {profile.avatarUrl ? (
                       <img src={resolveAssetUrl(profile.avatarUrl)} className="h-full w-full object-cover" />
                     ) : (
@@ -286,12 +286,12 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div className="pt-1.5 pb-2">
+                <div className="pt-1 md:pt-1.5 pb-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground leading-none">{name}</h1>
+                    <h1 className="font-heading text-xl md:text-2xl font-bold tracking-tight text-foreground leading-none">{name}</h1>
                     {profile.isVerified && <Pill variant="success" className="scale-90">Verified</Pill>}
                   </div>
-                  <div className="text-muted-foreground text-sm flex items-center gap-1.5 flex-wrap mt-1">
+                  <div className="text-muted-foreground text-xs md:text-sm flex items-center gap-1.5 flex-wrap mt-1">
                     <span className="font-bold text-foreground">@{profile.username || profile.universityId?.split('@')[0]}</span>
                     <span>·</span>
                     <span>{profile.role || 'Operative'}</span>
@@ -306,7 +306,7 @@ export default function Profile() {
                   </div>
                   
                   {/* Stats Telemetry Row */}
-                  <div className="flex items-center gap-4 text-xs font-semibold mt-2.5 text-muted-foreground">
+                  <div className="flex items-center flex-wrap gap-2 md:gap-4 text-xs font-semibold mt-3 md:mt-2.5 text-muted-foreground">
                     <span className="bg-secondary/40 px-2 py-0.5 rounded border border-border/30"><span className="font-mono text-foreground">{profile.reputationPoints?.toLocaleString() || 0}</span> Rep</span>
                     <span className="bg-secondary/40 px-2 py-0.5 rounded border border-border/30"><span className="font-mono text-foreground">{profile.forgeSolves?.length || 0}</span> Solves</span>
                     <span className="bg-secondary/40 px-2 py-0.5 rounded border border-border/30"><span className="font-mono text-foreground">{profile.hackathons?.length || 0}</span> Hackathons</span>
@@ -314,9 +314,9 @@ export default function Profile() {
                   </div>
 
                   {/* Links Row */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-muted-foreground text-xs mt-3">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Building2 className="h-3.5 w-3.5" /> {profile.eduInstitutionName || "Global Operative"}
+                  <div className="flex flex-wrap gap-x-3 gap-y-2 md:gap-x-4 md:gap-y-1.5 text-muted-foreground text-[11px] md:text-xs mt-3 md:mt-4">
+                    <span className="inline-flex items-center gap-1 md:gap-1.5">
+                      <Building2 className="h-3 md:h-3.5 w-3 md:w-3.5" /> {profile.eduInstitutionName || "Global Operative"}
                     </span>
                     {profile.socialLinks?.github && (
                       <a 

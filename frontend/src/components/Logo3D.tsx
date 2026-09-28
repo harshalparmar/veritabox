@@ -3,7 +3,7 @@ import { useEffect, useRef, useMemo } from "react";
 import * as THREE from "three";
 import { Edges } from "@react-three/drei";
 
-// Default dark colors — can be overridden via props
+// Default dark colors  -  can be overridden via props
 const DEFAULT_BG_HEX = "#0e0e10";
 const DEFAULT_LINE_HEX = "#58585e";
 const LINE_WIDTH = 1.2;

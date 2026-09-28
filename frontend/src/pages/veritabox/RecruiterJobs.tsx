@@ -208,10 +208,18 @@ export default function RecruiterJobs() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="flex-1 text-[11px] h-7 gap-1"
+                      className="text-[11px] h-7 gap-1"
                       onClick={() => navigate(`/jobs/${job._id}`)}
                     >
                       <Pencil className="h-3 w-3" /> View / Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 text-[11px] h-7 gap-1"
+                      onClick={() => navigate(`/applications?jobId=${encodeURIComponent(job._id)}`)}
+                    >
+                      <Users className="h-3 w-3" /> Applicants ({job.applicationCount ?? 0})
                     </Button>
                     <Button
                       variant="ghost"

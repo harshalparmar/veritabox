@@ -23,7 +23,11 @@ const excludedRoutes = [
   "/auth",
   "/register",
   "/forgot-password",
-  "/reset-password"
+  "/reset-password",
+  "/terms",
+  "/privacy",
+  "/cookies",
+  "/conduct"
 ];
 
 export function PublicShell({ children }: { children: React.ReactNode }) {

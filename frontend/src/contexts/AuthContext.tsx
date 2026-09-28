@@ -1,5 +1,5 @@
 /**
- * AuthContext.tsx — JWT-based auth context for the VeritaBox platform.
+ * AuthContext.tsx  -  JWT-based auth context for the VeritaBox platform.
  * Replaces Supabase auth. Uses the Express/MongoDB backend via api.ts.
  */
 
@@ -19,7 +19,7 @@ interface AuthContextType {
   signInWithMicrosoft: (code: string) => Promise<AuthResponse>;
   signInWithLinkedin: (code: string) => Promise<AuthResponse>;
   verifyTotp: (userId: string, token: string) => Promise<AuthResponse>;
-  lost2faRequest: (userId: string, email?: string) => Promise<{ message: string }>;
+  lost2faRequest: (userId: string, email?: string, password?: string) => Promise<{ message: string }>;
   lost2faVerify: (userId: string, otp: string) => Promise<AuthResponse>;
   linkSocialWithGithub: (code: string) => Promise<void>;
   linkSocialWithMicrosoft: (code: string) => Promise<void>;
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setTokenState(storedToken);
         } catch (err) {
           console.error("AuthContext init error:", err);
-          // Token is invalid or expired — clean up
+          // Token is invalid or expired  -  clean up
           removeToken();
           setUser(null);
           setTokenState(null);
@@ -129,8 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return res;
   };
 
-  const lost2faRequest = async (userId: string, email?: string) => {
-    return await authSecurityApi.lost2faRequest(userId, email);
+  const lost2faRequest = async (userId: string, email?: string, password?: string) => {
+    return await authSecurityApi.lost2faRequest(userId, email, password);
   };
 
   const lost2faVerify = async (userId: string, otp: string): Promise<AuthResponse> => {

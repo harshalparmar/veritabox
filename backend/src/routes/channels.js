@@ -7,6 +7,7 @@ import { protect } from '../middleware/authMiddleware.js';
 import { parseMentions } from '../utils/parseMentions.js';
 import { createNotification } from '../utils/notify.js';
 import { DEFAULT_CHANNELS } from '../utils/seedChannels.js';
+import { sanitizeUserContent } from '../utils/security.js';
 
 const router = express.Router();
 router.use(protect);
@@ -124,7 +125,13 @@ router.post('/:id/join', async (req, res) => {
   try {
     const channel = await Channel.findById(req.params.id);
     if (!channel) return res.status(404).json({ message: 'Channel not found.' });
-    if (!channel.members.some(m => m.toString() === req.user._id.toString())) {
+    const isMember = channel.members.some(m => m.toString() === req.user._id.toString());
+    // Private channels are invite-only: a non-member cannot self-join. They must
+    // be added by a channel admin.
+    if (channel.isPrivate && !isMember && !isChannelAdmin(channel, req.user._id)) {
+      return res.status(403).json({ message: 'This channel is private.' });
+    }
+    if (!isMember) {
       channel.members.push(req.user._id);
       await channel.save();
     }
@@ -229,12 +236,13 @@ router.post('/:channelId/messages', async (req, res) => {
       return res.status(400).json({ message: 'Empty message.' });
     }
 
-    const mentionedUsers = await parseMentions(content || '');
+    const cleanContent = sanitizeUserContent(content || '');
+    const mentionedUsers = await parseMentions(cleanContent);
 
     const message = await Message.create({
       senderId: req.user._id,
       channelId,
-      content: content || '',
+      content: cleanContent,
       attachments: attachments || [],
       replyTo: replyTo || null,
       mentions: mentionedUsers.map(u => u._id)

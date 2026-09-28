@@ -1,4 +1,4 @@
-/** TaskCard — Rich daily checklist task card */
+/** TaskCard  -  Rich daily checklist task card */
 import { cn } from "@/lib/utils";
 import { Clock, AlertCircle, CheckCircle2, BookOpen, Code, Cpu, RotateCcw, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";

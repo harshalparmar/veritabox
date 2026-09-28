@@ -2,7 +2,9 @@ import express from 'express';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
 import ArticleCategory from '../models/ArticleCategory.js';
 import Article from '../models/Article.js';
+import Challenge from '../models/Challenge.js';
 import slugify from 'slugify';
+import { escapeRegex } from '../utils/security.js';
 
 const router = express.Router();
 
@@ -52,13 +54,23 @@ router.get('/articles/:slug', async (req, res) => {
       { slug: req.params.slug, status: 'published' },
       { $inc: { views: 1 } },
       { new: true }
-    ).populate('author', 'name').populate('category', 'name slug').populate('relatedArticles', 'title slug difficulty');
+    ).populate('author', 'name').populate('category', 'name slug').populate('relatedArticles', 'title slug difficulty').populate('relatedChallenges', 'title difficulty tags');
 
     if (!article) {
       return res.status(404).json({ message: 'Article not found' });
     }
 
-    res.json(article);
+    let articleData = article;
+    if ((!article.relatedChallenges || article.relatedChallenges.length === 0) && article.tags && article.tags.length > 0) {
+      const autoMatched = await Challenge.find({
+        tags: { $in: article.tags },
+        $or: [{ activeFrom: null }, { activeFrom: { $lte: new Date() } }]
+      }).select('title difficulty tags').limit(5);
+      articleData = article.toObject();
+      articleData.relatedChallenges = autoMatched;
+    }
+
+    res.json(articleData);
   } catch (error) {
     console.error('Error fetching article:', error);
     res.status(500).json({ message: 'Server error fetching article' });
@@ -84,14 +96,15 @@ router.get('/search', async (req, res) => {
   try {
     const q = req.query.q?.toString().trim();
     if (!q || q.length < 2) return res.json([]);
+    const safe = escapeRegex(q);
 
     const articles = await Article.find({
       status: 'published',
       $or: [
-        { title: { $regex: q, $options: 'i' } },
-        { excerpt: { $regex: q, $options: 'i' } },
-        { tags: { $regex: q, $options: 'i' } },
-        { content: { $regex: q, $options: 'i' } }
+        { title: { $regex: safe, $options: 'i' } },
+        { excerpt: { $regex: safe, $options: 'i' } },
+        { tags: { $regex: safe, $options: 'i' } },
+        { content: { $regex: safe, $options: 'i' } }
       ]
     })
     .select('title slug excerpt difficulty estimatedReadMinutes views tags category createdAt')
@@ -270,7 +283,7 @@ router.delete('/admin/categories/:id', async (req, res) => {
 // POST /api/publishing/admin/articles
 router.post('/admin/articles', async (req, res) => {
   try {
-    const { title, category, content, status, tags, excerpt, difficulty, estimatedReadMinutes, prerequisites, relatedArticles, tableOfContents, order } = req.body;
+    const { title, category, content, status, tags, excerpt, difficulty, estimatedReadMinutes, prerequisites, relatedArticles, relatedChallenges, tableOfContents, order } = req.body;
 
     let slug = slugify(title, { lower: true, strict: true });
 
@@ -292,6 +305,7 @@ router.post('/admin/articles', async (req, res) => {
       estimatedReadMinutes: estimatedReadMinutes || 5,
       prerequisites: prerequisites || [],
       relatedArticles: relatedArticles || [],
+      relatedChallenges: relatedChallenges || [],
       tableOfContents: tableOfContents || [],
       order: order || 0,
       author: req.user._id
@@ -307,8 +321,8 @@ router.post('/admin/articles', async (req, res) => {
 // PUT /api/publishing/admin/articles/:id
 router.put('/admin/articles/:id', async (req, res) => {
   try {
-    const { title, category, content, status, tags, excerpt, difficulty, estimatedReadMinutes, prerequisites, relatedArticles, tableOfContents, order } = req.body;
-    const updateData = { category, content, status, tags, excerpt, difficulty, estimatedReadMinutes, prerequisites, relatedArticles, tableOfContents, order };
+    const { title, category, content, status, tags, excerpt, difficulty, estimatedReadMinutes, prerequisites, relatedArticles, relatedChallenges, tableOfContents, order } = req.body;
+    const updateData = { category, content, status, tags, excerpt, difficulty, estimatedReadMinutes, prerequisites, relatedArticles, relatedChallenges, tableOfContents, order };
 
     if (title) {
       updateData.title = title;

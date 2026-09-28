@@ -6,6 +6,16 @@ import User from '../models/User.js';
 import SAAuditLog from '../models/SAAuditLog.js';
 import { protectSA, saAudit } from '../middleware/saMiddleware.js';
 import { rateLimit } from '../middleware/rateLimit.js';
+import { decrypt } from '../utils/security.js';
+
+// SA TOTP secrets are stored encrypted. Legacy rows hold a raw base32 secret
+// (no ':' separators), so fall back to the stored value when it isn't ciphertext.
+function resolveTotpSecret(stored) {
+  if (typeof stored === 'string' && stored.includes(':')) {
+    try { return decrypt(stored); } catch { /* fall through to raw */ }
+  }
+  return stored;
+}
 
 const saLimiter = rateLimit({ windowMs: 15 * 60_000, max: 10, message: 'Too many attempts.' });
 
@@ -52,7 +62,7 @@ router.post('/auth/verify', saLimiter, async (req, res) => {
     }
 
     const verified = speakeasy.totp.verify({
-      secret: sa.totpSecret,
+      secret: resolveTotpSecret(sa.totpSecret),
       encoding: 'base32',
       token
     });
@@ -136,7 +146,16 @@ router.post('/ghost/:userId', protectSA, saAudit('Possess User'), async (req, re
  */
 router.get('/users', protectSA, async (req, res) => {
   try {
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    // Safety cap so the query can never load an unbounded collection into memory.
+    // High default preserves the existing "show all" UI for realistic sizes;
+    // optional page/limit params allow paginating as the user base grows.
+    const limit = Math.min(parseInt(req.query.limit) || 2000, 5000);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const users = await User.find({})
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'User query failure' });

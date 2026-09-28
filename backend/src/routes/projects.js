@@ -1,15 +1,26 @@
 import express from 'express';
 import Project from '../models/Project.js';
 import HackathonTeam from '../models/HackathonTeam.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+const isTeamMember = (team, user) => Boolean(
+    team && user && team.members.some(member => member.toString() === user._id.toString())
+);
+
+const publicProjectFilter = {
+    $or: [
+        { isPublic: true },
+        { isPublic: { $exists: false } }
+    ]
+};
 
 // @desc    Create a new Squadron Project Profile
 // @route   POST /api/projects
 router.post('/', protect, async (req, res) => {
     try {
-        const { title, tagline, description, associatedTeam, techStack } = req.body;
+        const { title, tagline, description, associatedTeam, techStack, isPublic } = req.body;
         
         // Validation: User must be part of the team
         const team = await HackathonTeam.findById(associatedTeam);
@@ -18,7 +29,7 @@ router.post('/', protect, async (req, res) => {
         }
 
         const project = await Project.create({
-            title, tagline, description, associatedTeam, techStack
+            title, tagline, description, associatedTeam, techStack, isPublic: isPublic === true
         });
 
         res.status(201).json(project);
@@ -30,17 +41,18 @@ router.post('/', protect, async (req, res) => {
 // @desc    Get all Projects (Public Mainnet Feed)
 router.get('/mainnet', async (req, res) => {
     try {
-        const projects = await Project.find({})
+        const projects = await Project.find(publicProjectFilter)
             .populate({
                 path: 'associatedTeam',
                 select: 'teamName score members isDisqualified'
             })
-            .sort({ updatedAt: -1 });
+            .sort({ updatedAt: -1 })
+            .lean();
 
         // Add 'Competition Verified' flag based on team score
         const enhancedProjects = projects.map(p => {
             const isVerified = p.associatedTeam?.score > 0;
-            return { ...p.toObject(), isVerified };
+            return { ...p, isVerified };
         });
 
         res.json(enhancedProjects);
@@ -93,9 +105,16 @@ router.patch('/:id/log', protect, async (req, res) => {
 
 // @desc    Get all Projects associated with a HackathonTeam (Squadron)
 // @route   GET /api/projects/team/:teamId
-router.get('/team/:teamId', async (req, res) => {
+router.get('/team/:teamId', optionalProtect, async (req, res) => {
     try {
-        const projects = await Project.find({ associatedTeam: req.params.teamId })
+        const team = await HackathonTeam.findById(req.params.teamId).select('members');
+        if (!team) return res.status(404).json({ message: 'Squadron not found.' });
+
+        const member = isTeamMember(team, req.user);
+        const query = member
+            ? { associatedTeam: req.params.teamId }
+            : { associatedTeam: req.params.teamId, ...publicProjectFilter };
+        const projects = await Project.find(query)
             .sort({ updatedAt: -1 });
         res.json(projects);
     } catch (error) {
@@ -104,10 +123,13 @@ router.get('/team/:teamId', async (req, res) => {
 });
 
 // @desc    Get internal TOC details
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalProtect, async (req, res) => {
     try {
-        const project = await Project.findById(req.params.id).populate('associatedTeam');
+        const project = await Project.findById(req.params.id).populate('associatedTeam').lean();
         if (!project) return res.status(404).json({ message: 'Project not found.' });
+        if (project.isPublic === false && !isTeamMember(project.associatedTeam, req.user)) {
+            return res.status(404).json({ message: 'Project not found.' });
+        }
         res.json(project);
     } catch (error) {
         res.status(500).json({ message: error.message });

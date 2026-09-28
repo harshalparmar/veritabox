@@ -5,6 +5,7 @@ import { PublicShell } from "@/components/veritabox/PublicShell";
 import { Surface, Pill } from "@/components/veritabox/UI";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Eye, Clock, ChevronRight, Code2, Loader2, Bookmark, BookmarkCheck, CheckCircle2 } from "lucide-react";
+import { SearchField } from "@/components/veritabox/SearchField";
 
 interface Article {
   _id: string; title: string; slug: string; excerpt?: string;
@@ -24,6 +25,7 @@ export default function TutorialsCategory() {
   const { user } = useAuth();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
@@ -63,6 +65,11 @@ export default function TutorialsCategory() {
   };
 
   const formattedCategoryName = slug?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const filteredArticles = articles.filter((article) => {
+    const query = search.trim().toLowerCase();
+    return !query || [article.title, article.excerpt, ...(article.tags || [])]
+      .some((value) => typeof value === "string" && value.toLowerCase().includes(query));
+  });
 
   return (
     <PublicShell>
@@ -77,16 +84,20 @@ export default function TutorialsCategory() {
 
         <div className="mb-8">
           <h1 className="text-2xl font-semibold tracking-tight">{formattedCategoryName}</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">{articles.length} tutorial{articles.length !== 1 ? 's' : ''} in this category</p>
+          <p className="text-[13px] text-muted-foreground mt-1">{filteredArticles.length} tutorial{filteredArticles.length !== 1 ? 's' : ''} in this category</p>
+        </div>
+
+        <div className="mb-5 max-w-2xl">
+          <SearchField label="tutorials in this category" placeholder="Search this category..." value={search} onChange={setSearch} />
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
-        ) : articles.length > 0 ? (
+        ) : filteredArticles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {articles.map((art) => {
+            {filteredArticles.map((art) => {
               const diff = DIFF_MAP[art.difficulty || "Beginner"] || DIFF_MAP.Beginner;
               const isCompleted = completedIds.has(art._id);
               const isBookmarked = bookmarkedIds.has(art._id);
@@ -125,7 +136,7 @@ export default function TutorialsCategory() {
         ) : (
           <div className="py-16 text-center text-muted-foreground border border-dashed border-border rounded-lg">
             <Code2 className="w-8 h-8 mx-auto mb-3 opacity-30" />
-            <p className="text-[13px]">No tutorials published in this category yet.</p>
+            <p className="text-[13px]">{articles.length ? "No tutorials match your search." : "No tutorials published in this category yet."}</p>
           </div>
         )}
       </div>

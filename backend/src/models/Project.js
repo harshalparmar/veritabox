@@ -36,6 +36,10 @@ const projectSchema = new mongoose.Schema({
     enum: ['Ideation', 'Prototype', 'Testing', 'Battle-Ready', 'Mission-Complete'],
     default: 'Ideation'
   },
+  isPublic: {
+    type: Boolean,
+    default: false
+  },
 
   // Progress Matrix (Timeline)
   progressMatrix: [{

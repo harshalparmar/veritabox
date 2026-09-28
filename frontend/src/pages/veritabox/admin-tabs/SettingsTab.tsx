@@ -27,7 +27,9 @@ export default function SettingsTab({ id, hackathon }: SettingsTabProps) {
         prizes: hackathon.prizes || [],
         minTeamSize: hackathon.minTeamSize ?? 1,
         maxTeamSize: hackathon.maxTeamSize ?? 5,
-        resources: hackathon.resources || []
+        resources: hackathon.resources || [],
+        bannerImage: hackathon.bannerImage || "",
+        thumbnailImage: hackathon.thumbnailImage || ""
       });
     }
   }, [hackathon]);
@@ -144,6 +146,74 @@ export default function SettingsTab({ id, hackathon }: SettingsTabProps) {
                   value={settingsData.maxTeamSize ?? 5}
                   onChange={(e) => setSettingsData({ ...settingsData, maxTeamSize: parseInt(e.target.value) || 5 })}
                 />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-muted-foreground font-bold uppercase">Cover Photo (Banner)</label>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 relative">
+                    <input 
+                      className="w-full h-10 bg-secondary border border-border px-4 text-[11px] rounded outline-none" 
+                      value={settingsData.bannerImage || ""} 
+                      placeholder="Image URL"
+                      onChange={(e) => setSettingsData({ ...settingsData, bannerImage: e.target.value })}
+                    />
+                  </div>
+                  <label className="h-10 w-10 bg-secondary border border-border rounded flex items-center justify-center cursor-pointer hover:bg-secondary/80 transition-colors">
+                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+                    <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsUploading(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append("document", file);
+                        const res = await hackathonsApi.uploadDocument(formData);
+                        setSettingsData((prev: any) => ({ ...prev, bannerImage: res.filePath }));
+                        toast.success("Cover photo uploaded successfully.");
+                      } catch (err: any) {
+                        toast.error(`UPLOAD_FAILURE: ${err.message}`);
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }} disabled={isUploading} />
+                  </label>
+                </div>
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-muted-foreground font-bold uppercase">Thumbnail Image</label>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 relative">
+                    <input 
+                      className="w-full h-10 bg-secondary border border-border px-4 text-[11px] rounded outline-none" 
+                      value={settingsData.thumbnailImage || ""} 
+                      placeholder="Image URL"
+                      onChange={(e) => setSettingsData({ ...settingsData, thumbnailImage: e.target.value })}
+                    />
+                  </div>
+                  <label className="h-10 w-10 bg-secondary border border-border rounded flex items-center justify-center cursor-pointer hover:bg-secondary/80 transition-colors">
+                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+                    <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsUploading(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append("document", file);
+                        const res = await hackathonsApi.uploadDocument(formData);
+                        setSettingsData((prev: any) => ({ ...prev, thumbnailImage: res.filePath }));
+                        toast.success("Thumbnail uploaded successfully.");
+                      } catch (err: any) {
+                        toast.error(`UPLOAD_FAILURE: ${err.message}`);
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }} disabled={isUploading} />
+                  </label>
+                </div>
               </div>
             </div>
             <div className="space-y-1.5">

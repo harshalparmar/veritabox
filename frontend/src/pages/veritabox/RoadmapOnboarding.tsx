@@ -1,6 +1,6 @@
 /**
- * RoadmapOnboarding.tsx — Multi-step onboarding wizard for roadmap generation.
- * All data (career goals, skills) comes from backend API — no hardcoding.
+ * RoadmapOnboarding.tsx  -  Multi-step onboarding wizard for roadmap generation.
+ * All data (career goals, skills) comes from backend API  -  no hardcoding.
  */
 
 import { useState, useEffect } from "react";
@@ -194,7 +194,7 @@ export default function RoadmapOnboarding() {
               <div>
                 <SectionTitle>What is your current level?</SectionTitle>
                 <p className="text-[12px] text-muted-foreground mb-4">
-                  Be honest — this helps us personalize your roadmap. We'll verify skills through assessments.
+                  Be honest  -  this helps us personalize your roadmap. We'll verify skills through assessments.
                 </p>
                 <div className="space-y-2">
                   {[

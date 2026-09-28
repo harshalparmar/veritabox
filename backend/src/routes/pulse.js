@@ -127,9 +127,16 @@ router.post('/', protect, isAdmin, async (req, res) => {
 // ── PUT /api/pulse/:id — Admin: Update announcement ───────────────────────────
 router.put('/:id', protect, isAdmin, async (req, res) => {
   try {
+    const allowedFields = ['title', 'body', 'type', 'priority', 'ctaLabel', 'ctaUrl',
+      'startDate', 'endDate', 'isActive', 'targetAudience', 'targetCareerGoals',
+      'targetSkills', 'targetLevels'];
+    const update = { updatedBy: req.user._id };
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
     const pulse = await VeritaBoxPulse.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedBy: req.user._id },
+      update,
       { new: true, runValidators: true }
     );
     if (!pulse) return res.status(404).json({ message: 'Announcement not found.' });

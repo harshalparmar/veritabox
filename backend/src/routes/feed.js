@@ -22,7 +22,7 @@ router.get('/mainnet', async (req, res) => {
             Project.find({}).populate('associatedTeam', 'teamName').sort({ updatedAt: -1 }).limit(10),
             Bounty.find({ status: 'Open' }).sort({ createdAt: -1 }).limit(10),
             BountySubmission.find({ status: 'Approved' }).populate('userId', 'name avatarUrl').populate('bountyId', 'title').sort({ updatedAt: -1 }).limit(10),
-            KnowledgeArticle.find({}).populate('author', 'name avatarUrl').sort({ createdAt: -1 }).limit(10),
+            KnowledgeArticle.find({ isPublished: true }).populate('author', 'name avatarUrl').sort({ createdAt: -1 }).limit(10),
             Signal.find({ isPublic: true })
                 .populate('user', 'name avatarUrl')
                 .populate('chapterId', 'chapterName')

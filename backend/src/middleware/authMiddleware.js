@@ -26,10 +26,26 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
+      // Purpose-scoped tokens (e.g. short-lived asset tokens) are NOT session
+      // credentials and must never authenticate an API request.
+      if (decoded.purpose) {
+        return res.status(401).json({ message: 'Not authorized, token failed' });
+      }
+
       req.user = await resolveUser(decoded.id);
 
       if (!req.user) {
          return res.status(401).json({ message: 'Not authorized, token failed' });
+      }
+
+      // Reject tokens issued before the user's last password change so a
+      // reset/change revokes every previously issued session token. A small
+      // skew avoids logging out the token freshly minted by the reset itself.
+      if (req.user.passwordChangedAt && decoded.iat) {
+        const changedAtSec = Math.floor(new Date(req.user.passwordChangedAt).getTime() / 1000);
+        if (decoded.iat < changedAtSec - 5) {
+          return res.status(401).json({ message: 'Session expired. Please log in again.' });
+        }
       }
 
       if (req.user.isSuspended) {
@@ -62,6 +78,8 @@ export const optionalProtect = async (req, res, next) => {
     try {
       const token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      // Ignore purpose-scoped (non-session) tokens on optional-auth routes.
+      if (decoded.purpose) return next();
       req.user = await resolveUser(decoded.id);
       return next();
     } catch (error) {

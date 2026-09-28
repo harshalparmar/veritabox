@@ -276,7 +276,7 @@ export default function MissionControl() {
               </Link>
             ))}
 
-            {/* Active Builds — from profile.currentProjects */}
+            {/* Active Builds  -  from profile.currentProjects */}
             <SectionTitle action={<Link to="/lab" className="text-[11px] text-muted-foreground hover:text-foreground">All →</Link>}>Active Builds</SectionTitle>
             {(profile as any)?.currentProjects && (profile as any).currentProjects.length > 0 ? (
               <div className="space-y-2">

@@ -1,6 +1,6 @@
 /**
- * TopicLearning.tsx — Theory learning page with Learn → Try → Verify flow.
- * All content from backend API — no hardcoded data. Dhriti AI help available.
+ * TopicLearning.tsx  -  Theory learning page with Learn → Try → Verify flow.
+ * All content from backend API  -  no hardcoded data. Dhriti AI help available.
  */
 
 import { useState, useEffect } from "react";

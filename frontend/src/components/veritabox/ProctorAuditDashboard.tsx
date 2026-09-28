@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { hackathonsApi, resolveGatedAssetUrl } from "@/lib/api";
+import { hackathonsApi, resolveGatedAssetUrl, fetchProctorAssetToken } from "@/lib/api";
 import { Surface, Pill } from "@/components/veritabox/UI";
 import {
   Camera, Trash2, Loader2, Calendar,
@@ -26,6 +26,15 @@ export default function ProctorAuditDashboard({ hackathonId }: Props) {
     queryKey: ["proctor-snapshots", hackathonId],
     queryFn: () => hackathonsApi.getProctorSnapshots(hackathonId),
     refetchInterval: 30000,
+  });
+
+  // Short-lived asset token for loading gated proctor images via <img>.
+  // Refreshed comfortably inside its 5-minute server-side lifetime.
+  const { data: assetToken } = useQuery({
+    queryKey: ["proctor-asset-token", hackathonId],
+    queryFn: () => fetchProctorAssetToken(),
+    refetchInterval: 4 * 60 * 1000,
+    staleTime: 4 * 60 * 1000,
   });
 
   const { data: violations, isLoading: loadingViolations } = useQuery({
@@ -205,7 +214,7 @@ export default function ProctorAuditDashboard({ hackathonId }: Props) {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {group.snapshots.map((s: any) => (
-                      <SnapshotCard key={s._id} snapshot={s} onSelect={setSelectedSnapshot} />
+                      <SnapshotCard key={s._id} snapshot={s} onSelect={setSelectedSnapshot} assetToken={assetToken} />
                     ))}
                   </div>
                 </div>
@@ -236,7 +245,7 @@ export default function ProctorAuditDashboard({ hackathonId }: Props) {
               </div>
 
               <Surface className="p-0 border-primary/30 overflow-hidden shadow-2xl shadow-primary/10">
-                 <img src={resolveGatedAssetUrl(selectedSnapshot.imagePath) || selectedSnapshot.imageData} alt="Analysis" className="w-full h-auto" />
+                 <img src={resolveGatedAssetUrl(selectedSnapshot.imagePath, assetToken) || selectedSnapshot.imageData} alt="Analysis" className="w-full h-auto" />
               </Surface>
 
               <div className="grid grid-cols-3 gap-4">
@@ -263,12 +272,12 @@ export default function ProctorAuditDashboard({ hackathonId }: Props) {
   );
 }
 
-function SnapshotCard({ snapshot: s, onSelect }: { snapshot: any, onSelect: (s: any) => void }) {
+function SnapshotCard({ snapshot: s, onSelect, assetToken }: { snapshot: any, onSelect: (s: any) => void, assetToken?: string | null }) {
   return (
     <Surface className="p-0 overflow-hidden group border-border/40 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(var(--primary),0.1)] hover:-translate-y-0.5 cursor-pointer flex flex-col">
       <div className="relative aspect-video bg-black/60 overflow-hidden" onClick={() => onSelect(s)}>
         <img
-          src={resolveGatedAssetUrl(s.imagePath) || s.imageData}
+          src={resolveGatedAssetUrl(s.imagePath, assetToken) || s.imageData}
           alt="Proctoring Snapshot"
           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
         />
@@ -347,11 +356,11 @@ function ViolationLogView({ violations, isLoading }: { violations: any[] | undef
               <div>
                 <span className="font-bold uppercase tracking-tight">{v.type?.replace(/_/g, ' ')}</span>
                 <span className="ml-2 text-muted-foreground">@{v.user?.name || v.userId}</span>
-                {v.team?.teamName && <span className="ml-2 opacity-60">— {v.team.teamName}</span>}
+                {v.team?.teamName && <span className="ml-2 opacity-60"> -  {v.team.teamName}</span>}
               </div>
             </div>
             <div className="text-[10px] font-mono opacity-70">
-              {v.timestamp ? format(new Date(v.timestamp), "yyyy-MM-dd HH:mm:ss") : "—"}
+              {v.timestamp ? format(new Date(v.timestamp), "yyyy-MM-dd HH:mm:ss") : " - "}
             </div>
           </div>
         ))}

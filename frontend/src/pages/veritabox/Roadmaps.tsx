@@ -1,7 +1,7 @@
 /**
- * Roadmaps.tsx — Main roadmap overview page.
+ * Roadmaps.tsx  -  Main roadmap overview page.
  * Checks onboarding status, shows roadmap with phases/modules/topics.
- * All data from API — no mock/hardcoded content.
+ * All data from API  -  no mock/hardcoded content.
  */
 
 import { useState, useEffect } from "react";

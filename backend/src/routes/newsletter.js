@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, isAdmin } from '../middleware/authMiddleware.js';
+import { protect, isAdmin, optionalProtect } from '../middleware/authMiddleware.js';
 import NewsletterSubscriber from '../models/NewsletterSubscriber.js';
 import NewsletterCampaign from '../models/NewsletterCampaign.js';
 import { sendNewsletterBroadcast } from '../utils/email.js';
@@ -8,8 +8,8 @@ const router = express.Router();
 
 // @route   POST /api/newsletter/subscribe
 // @desc    Subscribe an email to the newsletter
-// @access  Public
-router.post('/subscribe', async (req, res) => {
+// @access  Public (associates the logged-in user when a token is present)
+router.post('/subscribe', optionalProtect, async (req, res) => {
   try {
     const { email } = req.body;
     
@@ -45,18 +45,30 @@ router.post('/subscribe', async (req, res) => {
 });
 
 // @route   POST /api/newsletter/unsubscribe
-// @desc    Unsubscribe an email from the newsletter
-// @access  Public
-router.post('/unsubscribe', async (req, res) => {
+// @desc    Unsubscribe from the newsletter. Requires the subscriber's
+//          unsubscribe token (from their email link) or an authenticated user
+//          unsubscribing their own address — so no one can mass-unsubscribe
+//          others by guessing/enumerating emails.
+// @access  Public (token) / Authenticated (self)
+router.post('/unsubscribe', optionalProtect, async (req, res) => {
   try {
-    const { email } = req.body;
-    
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
+    const { token, email } = req.body;
+
+    let subscriber = null;
+    if (token) {
+      subscriber = await NewsletterSubscriber.findOne({ unsubscribeToken: String(token) });
+    } else if (req.user && email) {
+      // Authenticated users may unsubscribe only their own email.
+      const owns = [req.user.email, req.user.universityId]
+        .filter(Boolean)
+        .map(e => e.toLowerCase())
+        .includes(String(email).toLowerCase());
+      if (!owns) return res.status(403).json({ message: 'You can only unsubscribe your own email.' });
+      subscriber = await NewsletterSubscriber.findOne({ email: email.toLowerCase() });
+    } else {
+      return res.status(400).json({ message: 'An unsubscribe token is required.' });
     }
 
-    const subscriber = await NewsletterSubscriber.findOne({ email: email.toLowerCase() });
-    
     if (!subscriber) {
       return res.status(404).json({ message: 'Subscriber not found' });
     }
@@ -64,7 +76,7 @@ router.post('/unsubscribe', async (req, res) => {
     subscriber.isActive = false;
     subscriber.unsubscribedAt = Date.now();
     await subscriber.save();
-    
+
     res.status(200).json({ message: 'Unsubscribed successfully' });
   } catch (error) {
     console.error('Unsubscribe Error:', error);

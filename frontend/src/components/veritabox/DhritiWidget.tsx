@@ -127,7 +127,7 @@ export function DhritiWidget() {
         }
         if (!cancelled) setPageContext(ctx);
       } catch {
-        // silently fail — the backend has its own context
+        // silently fail  -  the backend has its own context
       }
     };
     fetchContext();
@@ -270,7 +270,7 @@ export function DhritiWidget() {
               </div>
             )}
 
-            {/* Suggested prompts — only show at the start */}
+            {/* Suggested prompts  -  only show at the start */}
             {chatHistory.length <= 1 && !chatLoading && (
               <div className="flex flex-wrap gap-2 pt-2">
                 {SUGGESTED_PROMPTS[currentPage].map((prompt) => (

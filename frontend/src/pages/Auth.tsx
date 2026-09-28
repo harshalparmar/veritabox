@@ -32,6 +32,10 @@ export default function Auth() {
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
+  const requestedRedirect = new URLSearchParams(location.search).get("redirect");
+  const jobRedirect = requestedRedirect?.startsWith("/jobs/") && !requestedRedirect.startsWith("//")
+    ? requestedRedirect
+    : null;
 
   const [isMounted, setIsMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +53,7 @@ export default function Auth() {
       m === "forgot" ? "/forgot-password" :
       m === "reset" ? "/reset-password" :
       "/auth";
-    navigate(path, { replace: true });
+    navigate(`${path}${jobRedirect ? `?redirect=${encodeURIComponent(jobRedirect)}` : ""}`, { replace: true });
   };
 
   useEffect(() => { 
@@ -119,7 +123,7 @@ export default function Auth() {
             toast({ title: "Identity Linked", description: "LinkedIn credentials synchronized." });
             navigate("/settings", { replace: true });
           } else {
-            // Unknown or tampered OAuth state — reject it explicitly
+            // Unknown or tampered OAuth state  -  reject it explicitly
             toast({ title: "Authentication Error", description: "Unknown OAuth state. Please try again.", variant: "destructive" });
           }
         } catch (error: any) {
@@ -236,7 +240,7 @@ export default function Auth() {
       return <Navigate to="/dashboard" replace />;
     }
     if (user.isOnboarded) {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to={jobRedirect && (user.role === "Student" || user.role === "Professional") ? jobRedirect : "/dashboard"} replace />;
     }
     // If not onboarded, stay on Auth page for EnlistmentFlow
   }
@@ -374,7 +378,7 @@ export default function Auth() {
     setIsSubmitting(true);
     try {
       const currentIdentifier = loginEmail || forgotEmail || signupEmail;
-      await lost2faRequest(totpUserId, currentIdentifier);
+      await lost2faRequest(totpUserId, currentIdentifier, loginPassword);
       setLost2faSent(true);
       switchMode("lost2fa");
       toast({ title: "OTP Sent", description: "Check your email for the 2FA bypass code." });
@@ -436,7 +440,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col lg:flex-row">
-      {/* ============== LEFT — brand / 3D scene ============== */}
+      {/* ============== LEFT  -  brand / 3D scene ============== */}
       <aside className="relative lg:w-1/2 lg:min-h-screen overflow-hidden border-b lg:border-b-0 lg:border-r border-border bg-card">
         {/* Grid */}
         <div
@@ -479,7 +483,7 @@ export default function Auth() {
             </p>
           </div>
 
-          {/* Bottom strip — only on lg */}
+          {/* Bottom strip  -  only on lg */}
           <div className="hidden lg:block mt-10">
             <div className="grid grid-cols-3 gap-3 text-[11px]">
               {sideContent.stats.map((s) => (
@@ -494,15 +498,15 @@ export default function Auth() {
       </aside>
 
 
-      {/* ============== RIGHT — form ============== */}
+      {/* ============== RIGHT  -  form ============== */}
       <main className="flex-1 flex items-start lg:items-center justify-center p-6 sm:p-10 lg:p-14">
         <div className="w-full max-w-[440px] space-y-8">
           {/* ============ ENLISTMENT FLOW ============ */}
           {user && !user.isOnboarded ? (
-            <EnlistmentFlow />
+            <EnlistmentFlow returnTo={jobRedirect} />
           ) : (
             <>
-              {/* Top — switcher */}
+              {/* Top  -  switcher */}
               {mode === "signin" && (
                 <div className="flex justify-end text-[13px] text-muted-foreground">
                   New here?{" "}

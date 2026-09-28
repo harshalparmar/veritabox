@@ -21,7 +21,7 @@ export default function HackathonLeaderboard({ hackathonId }: Props) {
     refetchInterval: 10000,
   });
 
-  // 4B — Real-time leaderboard refresh on socket event (reduces poll dependency)
+  // 4B  -  Real-time leaderboard refresh on socket event (reduces poll dependency)
   useEffect(() => {
     if (!socket) return;
     const handleLeaderboardUpdate = () => {
@@ -83,7 +83,7 @@ export default function HackathonLeaderboard({ hackathonId }: Props) {
                       </td>
                       <td className="px-4 py-4">
                         <div>
-                          {/* 3C — Link to squadron profile page via /veritabox/squadron/:identifier */}
+                          {/* 3C  -  Link to squadron profile page via /veritabox/squadron/:identifier */}
                           <Link
                             to={`/veritabox/squadron/${entry.slug || entry._id}`}
                             onClick={(e) => e.stopPropagation()}

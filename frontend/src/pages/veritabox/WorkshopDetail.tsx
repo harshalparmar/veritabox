@@ -314,7 +314,7 @@ export default function WorkshopDetail() {
                   disabled={registerMutation.isPending || isFull}
                   className="w-full h-9 bg-primary text-primary-foreground rounded text-[11px] font-bold uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {registerMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isFull ? "Workshop Full" : "RSVP — Reserve Spot"}
+                  {registerMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isFull ? "Workshop Full" : "RSVP  -  Reserve Spot"}
                 </button>
               )
             )}

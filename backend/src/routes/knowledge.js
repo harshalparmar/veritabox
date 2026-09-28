@@ -47,7 +47,11 @@ router.get('/collections', async (req, res) => {
 router.post('/collections', protect, async (req, res) => {
   try {
     if (!['Admin'].includes(req.user.role)) return res.status(403).json({ message: 'Unauthorized' });
-    const collection = await ArticleCollection.create({ ...req.body, author: req.user._id });
+    const { title, description, coverImage, articles, isFeatured } = req.body;
+    const collection = await ArticleCollection.create({
+      title, description, coverImage, articles, isFeatured,
+      author: req.user._id,
+    });
     res.status(201).json(collection);
   } catch (error) { res.status(500).json({ message: 'Error' }); }
 });
@@ -121,12 +125,23 @@ router.put('/comments/:commentId/solution', protect, async (req, res) => {
 });
 
 // GET /api/knowledge/:id - Fetch by ID (Internal/Admin)
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalProtect, async (req, res) => {
   try {
     const article = await KnowledgeArticle.findById(req.params.id)
       .populate('author', 'name role')
       .populate('categoryId', 'name');
     if (!article) return res.status(404).json({ message: 'Article not found' });
+
+    // Unpublished drafts are visible only to the author or an Admin.
+    if (!article.isPublished) {
+      const authorId = article.author?._id ? article.author._id.toString() : article.author?.toString();
+      const isAuthorized = req.user && (
+        authorId === req.user._id.toString() ||
+        req.user.role === 'Admin'
+      );
+      if (!isAuthorized) return res.status(404).json({ message: 'Article not found' });
+    }
+
     res.json(article);
   } catch (error) { res.status(500).json({ message: 'Error fetching article by ID: ' + error.message }); }
 });
@@ -194,18 +209,23 @@ router.post('/:id/upvote', protect, async (req, res) => {
   try {
     const article = await KnowledgeArticle.findById(req.params.id);
     if (!article) return res.status(404).json({ message: 'Article not found' });
-    if (article.upvotes.includes(req.user._id)) {
+    const alreadyUpvoted = article.upvotes.some(id => id.toString() === req.user._id.toString());
+    // Symmetric reputation: +5 on upvote, -5 on un-upvote. Toggling therefore
+    // nets zero, so a user cannot farm reputation by repeatedly toggling.
+    let repDelta = 0;
+    if (alreadyUpvoted) {
       article.upvotes = article.upvotes.filter(id => id.toString() !== req.user._id.toString());
-    } else { 
+      repDelta = -5;
+    } else {
       article.upvotes.push(req.user._id);
-      
-      // Intel Sharing Dividends: Award 5 reputation points to author's chapter
-      const author = await User.findById(article.author);
-      if (author && author.chapterId) {
-        await Chapter.findByIdAndUpdate(author.chapterId, { 
-          $inc: { 'stats.totalReputation': 5, 'stats.reputationVelocity': 5 } 
-        });
-      }
+      repDelta = 5;
+    }
+
+    const author = await User.findById(article.author);
+    if (author && author.chapterId) {
+      await Chapter.findByIdAndUpdate(author.chapterId, {
+        $inc: { 'stats.totalReputation': repDelta, 'stats.reputationVelocity': repDelta }
+      });
     }
     await article.save();
     res.json(article);
@@ -233,7 +253,8 @@ router.get('/:id/comments', async (req, res) => {
 
 router.post('/:id/comments', protect, async (req, res) => {
   try {
-    const comment = await Comment.create({ articleId: req.params.id, author: req.user._id, content: req.body.content });
+    const content = sanitizeUserContent(req.body.content || '');
+    const comment = await Comment.create({ articleId: req.params.id, author: req.user._id, content });
     res.status(201).json(await comment.populate('author', 'name role'));
   } catch (error) { res.status(500).json({ message: 'Error' }); }
 });

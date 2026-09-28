@@ -69,7 +69,7 @@
 }
 
 .banter-loader__box:nth-child(1) {
-  animation: moveBox-1 4s infinite;
+  animation: moveBox-1 8s infinite;
 }
 
 @keyframes moveBox-2 {
@@ -87,7 +87,7 @@
 }
 
 .banter-loader__box:nth-child(2) {
-  animation: moveBox-2 4s infinite;
+  animation: moveBox-2 8s infinite;
 }
 
 @keyframes moveBox-3 {
@@ -105,7 +105,7 @@
 }
 
 .banter-loader__box:nth-child(3) {
-  animation: moveBox-3 4s infinite;
+  animation: moveBox-3 8s infinite;
 }
 
 @keyframes moveBox-4 {
@@ -123,7 +123,7 @@
 }
 
 .banter-loader__box:nth-child(4) {
-  animation: moveBox-4 4s infinite;
+  animation: moveBox-4 8s infinite;
 }
 
 @keyframes moveBox-5 {
@@ -141,7 +141,7 @@
 }
 
 .banter-loader__box:nth-child(5) {
-  animation: moveBox-5 4s infinite;
+  animation: moveBox-5 8s infinite;
 }
 
 @keyframes moveBox-6 {
@@ -159,7 +159,7 @@
 }
 
 .banter-loader__box:nth-child(6) {
-  animation: moveBox-6 4s infinite;
+  animation: moveBox-6 8s infinite;
 }
 
 @keyframes moveBox-7 {
@@ -177,7 +177,7 @@
 }
 
 .banter-loader__box:nth-child(7) {
-  animation: moveBox-7 4s infinite;
+  animation: moveBox-7 8s infinite;
 }
 
 @keyframes moveBox-8 {
@@ -195,7 +195,7 @@
 }
 
 .banter-loader__box:nth-child(8) {
-  animation: moveBox-8 4s infinite;
+  animation: moveBox-8 8s infinite;
 }
 
 @keyframes moveBox-9 {
@@ -213,5 +213,5 @@
 }
 
 .banter-loader__box:nth-child(9) {
-  animation: moveBox-9 4s infinite;
+  animation: moveBox-9 8s infinite;
 }

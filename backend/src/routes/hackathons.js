@@ -13,6 +13,18 @@ import User from '../models/User.js';
 import slugify from 'slugify';
 import { entropyAudit } from '../middleware/antiCheat.js';
 import { roundGuard } from '../middleware/roundGuard.js';
+import { generateSecureCode } from '../utils/security.js';
+
+// Generate a unique, unguessable invite code. Uses a CSPRNG (not Math.random)
+// and bounds the retry loop so a code-space collision can never hang the request.
+async function generateUniqueInviteCode() {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const code = generateSecureCode(6).toUpperCase();
+    const existing = await HackathonTeam.findOne({ inviteCode: code });
+    if (!existing) return code;
+  }
+  throw new Error('Failed to generate a unique invite code. Please retry.');
+}
 
 function getRoleCategory(role) {
   if (['Professional', 'Industry'].includes(role)) return 'Professional';
@@ -90,7 +102,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
 // @access  Admin
 router.patch('/:id', protect, isAdmin, async (req, res) => {
   try {
-    const allowed = ['title', 'description', 'shortDescription', 'bannerImage', 'startDate',
+    const allowed = ['title', 'description', 'shortDescription', 'bannerImage', 'thumbnailImage', 'startDate',
       'endDate', 'registrationDeadline', 'mode', 'venue', 'maxTeamSize', 'minTeamSize',
       'maxParticipants', 'prizes', 'rules', 'themes', 'judgingCriteria', 'schedule',
       'resources', 'sponsors', 'faqs', 'isPublished', 'tags', 'type', 'subCategory',
@@ -413,12 +425,7 @@ router.post('/:id/register', protect, async (req, res) => {
             return res.status(400).json({ message: 'Team name must be between 2 and 50 characters.' });
         }
 
-        let inviteCode, isUnique = false;
-        while (!isUnique) {
-            inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const dup = await HackathonTeam.findOne({ inviteCode });
-            if (!dup) isUnique = true;
-        }
+        const inviteCode = await generateUniqueInviteCode();
 
         const team = await HackathonTeam.create({
             hackathonId: hId,
@@ -445,15 +452,7 @@ router.post('/teams/standalone', protect, async (req, res) => {
             return res.status(400).json({ message: 'Team name must be between 2 and 50 characters.' });
         }
 
-        let inviteCode;
-        let isUnique = false;
-        
-        // Ensure invite code uniqueness across all units
-        while (!isUnique) {
-            inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const existing = await HackathonTeam.findOne({ inviteCode });
-            if (!existing) isUnique = true;
-        }
+        const inviteCode = await generateUniqueInviteCode();
 
         const team = await HackathonTeam.create({
             teamName,
@@ -1468,7 +1467,7 @@ router.get('/squadron/:identifier', async (req, res) => {
         // Self-heal: Generate and save slug if it is missing
         if (!team.slug) {
             const slugBase = team.teamName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-            const randomHash = Math.random().toString(36).substring(2, 6);
+            const randomHash = generateSecureCode(4);
             team.slug = `${slugBase}-${randomHash}`;
             await team.save();
         }
@@ -1511,7 +1510,7 @@ router.get('/squadron/:identifier', async (req, res) => {
             if (authHeader?.startsWith('Bearer ')) {
                 const { default: jwt } = await import('jsonwebtoken');
                 if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET not configured');
-                const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+                const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET, { algorithms: ['HS256'] });
                 const memberId = decoded.id?.toString();
                 isMember = responseData.members?.some(m =>
                     (m._id || m).toString() === memberId

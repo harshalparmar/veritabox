@@ -7,7 +7,8 @@ import { AdminLayout } from "@/components/veritabox/AdminLayout";
 import { PageContent } from "@/components/veritabox/VeritaBoxLayout";
 import { Surface } from "@/components/veritabox/UI";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Loader2 } from "lucide-react";
+import { Save, ArrowLeft, Loader2, Zap } from "lucide-react";
+import { forgeApi } from "@/lib/api";
 
 interface Category {
   _id: string;
@@ -28,18 +29,25 @@ export default function AdminPublishingWrite() {
   const [tagsInput, setTagsInput] = useState("");
   const [prereqInput, setPrereqInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [challenges, setChallenges] = useState<{ _id: string; title: string; difficulty: string; tags: string[] }[]>([]);
+  const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
+  const [challengeSearch, setChallengeSearch] = useState("");
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchInitData = async () => {
       try {
-        const data = await api.get<Category[]>("/api/publishing/categories");
-        setCategories(data || []);
-        if (data && data.length > 0) setSelectedCategory(data[0]._id);
+        const [catsData, challengesData] = await Promise.all([
+          api.get<Category[]>("/api/publishing/categories"),
+          forgeApi.getAll()
+        ]);
+        setCategories(catsData || []);
+        if (catsData && catsData.length > 0) setSelectedCategory(catsData[0]._id);
+        setChallenges(challengesData || []);
       } catch (error) {
-        console.error("Failed to load categories", error);
+        console.error("Failed to load initial data", error);
       }
     };
-    fetchCategories();
+    fetchInitData();
   }, []);
 
   const publishArticle = async (status: 'published' | 'draft') => {
@@ -58,6 +66,7 @@ export default function AdminPublishingWrite() {
         estimatedReadMinutes: readTime,
         tags: tagsInput.split(',').map(t => t.trim()).filter(Boolean),
         prerequisites: prereqInput.split(',').map(t => t.trim()).filter(Boolean),
+        relatedChallenges: selectedChallenges,
       });
       toast({ title: "Success", description: `Article ${status === 'published' ? 'published' : 'saved as draft'} successfully!` });
       navigate(`/cmd/publishing`);
@@ -152,6 +161,56 @@ export default function AdminPublishingWrite() {
                 placeholder="Basic JavaScript, HTML fundamentals"
                 className="w-full bg-background border border-border rounded-md px-3 py-2 text-[13px] focus:outline-none focus:border-primary transition-colors" />
             </div>
+
+            {/* CodeForge Challenge Picker */}
+            {challenges.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-medium flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-primary" />
+                  Link CodeForge Challenges
+                  <span className="text-muted-foreground font-normal">(optional  -  auto-matched by tags if empty)</span>
+                </label>
+                <input
+                  type="text"
+                  value={challengeSearch}
+                  onChange={(e) => setChallengeSearch(e.target.value)}
+                  placeholder="Search challenges..."
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-[13px] focus:outline-none focus:border-primary transition-colors"
+                />
+                <div className="max-h-[200px] overflow-y-auto border border-border rounded-md bg-background divide-y divide-border/50">
+                  {challenges
+                    .filter(c => !challengeSearch || c.title.toLowerCase().includes(challengeSearch.toLowerCase()) ||
+                      c.tags?.some(t => t.toLowerCase().includes(challengeSearch.toLowerCase())))
+                    .map(c => (
+                      <label key={c._id} className="flex items-center gap-3 px-3 py-2 hover:bg-secondary/30 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={selectedChallenges.includes(c._id)}
+                          onChange={() => {
+                            setSelectedChallenges(prev =>
+                              prev.includes(c._id) ? prev.filter(id => id !== c._id) : [...prev, c._id]
+                            );
+                          }}
+                          className="rounded border-border"
+                        />
+                        <span className="text-[13px] flex-1 truncate">{c.title}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                          c.difficulty === 'Elite' ? 'text-destructive bg-destructive/10 border-destructive/20' :
+                          c.difficulty === 'Operative' ? 'text-warning bg-warning/10 border-warning/20' :
+                          'text-success bg-success/10 border-success/20'
+                        }`}>
+                          {c.difficulty}
+                        </span>
+                      </label>
+                    ))}
+                </div>
+                {selectedChallenges.length > 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {selectedChallenges.length} challenge{selectedChallenges.length > 1 ? 's' : ''} linked
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* WYSIWYG Editor */}
             <div className="space-y-2 pt-2">

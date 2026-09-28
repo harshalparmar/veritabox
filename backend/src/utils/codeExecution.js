@@ -12,16 +12,33 @@ async function executePiston(language, code, stdin) {
   const langConfig = pistonLangs[language];
   if (!langConfig) throw new Error(`Unsupported language: ${language}`);
 
-  const response = await fetch(`${PISTON_URL}/api/v2/execute`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      language: langConfig.language,
-      version: langConfig.version,
-      files: [{ content: code }],
-      stdin: stdin || ''
-    }),
-  });
+  // Abort the request if Piston hangs so a stuck execution can't tie up the
+  // Node request indefinitely.
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 15000);
+
+  let response;
+  try {
+    response = await fetch(`${PISTON_URL}/api/v2/execute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        language: langConfig.language,
+        version: langConfig.version,
+        files: [{ content: code }],
+        stdin: stdin || '',
+        // Explicit resource caps so untrusted code can't exhaust the sandbox
+        // (fork bombs, memory hogs, long-running loops).
+        compile_timeout: 10000,
+        run_timeout: 5000,
+        compile_memory_limit: 256_000_000,
+        run_memory_limit: 256_000_000,
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(abortTimer);
+  }
 
   if (!response.ok) {
     throw new Error(`Piston returned status ${response.status}`);

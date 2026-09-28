@@ -2,7 +2,7 @@ import express from 'express';
 import Event from '../models/Event.js';
 import EventRegistration from '../models/EventRegistration.js';
 import { sendEventRegistrationEmail } from '../utils/email.js';
-import { protect as auth } from '../middleware/authMiddleware.js';
+import { protect as auth, optionalProtect } from '../middleware/authMiddleware.js';
 import { requireAdmin } from '../middleware/rbacMiddleware.js';
 
 const router = express.Router();
@@ -100,12 +100,15 @@ router.get('/:id/registrations', auth, requireAdmin, async (req, res) => {
 });
 
 // POST /api/events/:id/register - Register for an event
-router.post('/:id/register', async (req, res) => {
+router.post('/:id/register', optionalProtect, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found.' });
 
-    const { name, email, phone, status, institutionOrCompany, userId } = req.body;
+    const { name, email, phone, status, institutionOrCompany } = req.body;
+    // Associate the registration with the authenticated user only — never a
+    // client-supplied userId (which could impersonate another account).
+    const userId = req.user?._id || null;
 
     // Validate required fields and email format
     if (!name || !email) {

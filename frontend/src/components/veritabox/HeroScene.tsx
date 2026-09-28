@@ -5,7 +5,7 @@ import { Edges } from "@react-three/drei";
 import { useTheme } from "next-themes";
 
 /**
- * HeroScene — ambient 3D background for the landing hero.
+ * HeroScene  -  ambient 3D background for the landing hero.
  * Theme-aware: re-resolves CSS variable colors when the theme changes
  * so the wireframes stay visible in both light & dark mode.
  */

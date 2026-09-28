@@ -472,7 +472,7 @@ export default function KnowledgeArticle() {
           </div>
         </article>
 
-        {/* TOC — Intelligence Map */}
+        {/* TOC  -  Intelligence Map */}
         <aside className="hidden lg:block">
           <div className="sticky top-20">
             <div className="text-[10px] uppercase tracking-[0.14em] font-mono text-muted-foreground mb-3 flex items-center gap-2">

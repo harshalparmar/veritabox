@@ -405,7 +405,7 @@ function SquadronManager({ compId }: { compId: string }) {
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono">
                       <span>Code: <span className="text-warning font-black">{squad.joinCode}</span></span>
-                      <span>Leader: <span className="text-foreground">{squad.leaderId?.name || '—'}</span></span>
+                      <span>Leader: <span className="text-foreground">{squad.leaderId?.name || ' - '}</span></span>
                     </div>
                   </div>
 

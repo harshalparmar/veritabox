@@ -5,7 +5,7 @@ import { Surface, Stat, Pill } from "@/components/veritabox/UI";
 import { 
   Rocket, ArrowLeft, Loader2, 
   Terminal, Zap, CheckCircle2,
-  Cpu, Code2, Layers, Info, ShieldCheck
+  Cpu, Code2, Layers, Info, ShieldCheck, Globe, LockKeyhole
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectsApi, hackathonsApi } from "@/lib/api";
@@ -24,7 +24,8 @@ export default function LabNew() {
     tagline: "",
     description: "",
     associatedTeam: "",
-    techStack: [] as string[]
+    techStack: [] as string[],
+    isPublic: false
   });
 
   const [tagInput, setTagInput] = useState("");
@@ -39,7 +40,9 @@ export default function LabNew() {
     mutationFn: () => projectsApi.create(formData),
     onSuccess: (data) => {
       toast.success("PROJECT INITIALIZED", {
-        description: "Your build log is now live on the Mainnet.",
+        description: data.isPublic
+          ? "Your project is now visible on the Mainnet."
+          : "Your project is private to your squadron.",
       });
       queryClient.invalidateQueries({ queryKey: ["projects-mainnet"] });
       navigate(`/lab/${data._id}`);
@@ -83,6 +86,40 @@ export default function LabNew() {
                         className="h-12 bg-secondary/40 border-border focus:border-primary/50 text-[16px] font-bold"
                     />
                   </div>
+
+                  <fieldset className="space-y-2">
+                    <legend className="ml-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                      Project visibility
+                    </legend>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Project visibility">
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={formData.isPublic}
+                        onClick={() => setFormData(prev => ({ ...prev, isPublic: true }))}
+                        className={`flex min-w-0 items-start gap-3 border p-3 text-left transition-colors ${formData.isPublic ? "border-foreground bg-secondary/70" : "border-border hover:bg-secondary/40"}`}
+                      >
+                        <Globe className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block text-[12px] font-semibold">Public</span>
+                          <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground">Visible in Circuit Lab to everyone.</span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={!formData.isPublic}
+                        onClick={() => setFormData(prev => ({ ...prev, isPublic: false }))}
+                        className={`flex min-w-0 items-start gap-3 border p-3 text-left transition-colors ${!formData.isPublic ? "border-foreground bg-secondary/70" : "border-border hover:bg-secondary/40"}`}
+                      >
+                        <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block text-[12px] font-semibold">Private</span>
+                          <span className="mt-1 block text-[10px] leading-relaxed text-muted-foreground">Only squadron members can view it.</span>
+                        </span>
+                      </button>
+                    </div>
+                  </fieldset>
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground ml-1 flex items-center gap-2">

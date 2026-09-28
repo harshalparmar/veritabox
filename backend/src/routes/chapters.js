@@ -228,9 +228,11 @@ router.post('/:id/join', protect, async (req, res) => {
       return res.status(400).json({ message: 'Already a member' });
     }
 
-    chapter.members.push(req.user._id);
-    await chapter.save();
-    res.json({ message: 'Successfully joined chapter', chapter });
+    // Membership requires the review workflow — direct self-join would bypass
+    // the application/approval process handled via /apply-to-join.
+    return res.status(403).json({
+      message: 'Membership requires an application. Please apply to join this chapter.'
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

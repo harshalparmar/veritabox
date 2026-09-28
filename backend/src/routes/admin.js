@@ -18,6 +18,7 @@ import PracticalSubmission from '../models/PracticalSubmission.js';
 import Admin from '../models/Admin.js';
 import slugify from 'slugify';
 import { createNotification } from '../utils/notify.js';
+import { safeEqual } from '../utils/otpSecurity.js';
 
 
 const router = express.Router({ mergeParams: true });
@@ -27,10 +28,13 @@ router.use(protect);
 router.use(isAdmin);
 
 router.use(async (req, res, next) => {
-  const token = req.params.adminToken;
+  // Accept the admin token only from a header/body — never from the URL path,
+  // which would leak it into access logs, history, and Referer headers.
+  const token = req.adminToken || req.headers['x-admin-token'];
   if (!token) return res.status(403).json({ message: 'Access denied' });
   const admin = await Admin.findById(req.user._id);
-  if (!admin || admin.adminToken !== token) {
+  // Constant-time comparison to avoid leaking the token via response timing.
+  if (!admin || !admin.adminToken || !safeEqual(String(admin.adminToken), String(token))) {
     return res.status(403).json({ message: 'Invalid or expired admin session' });
   }
   next();
@@ -74,7 +78,16 @@ router.get('/stats', async (req, res) => {
 // GET /api/admin/users
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    // Safety cap so the query can never load an unbounded collection into memory.
+    // High default preserves the existing "show all" admin UI for realistic sizes;
+    // optional page/limit params allow paginating as the user base grows.
+    const limit = Math.min(parseInt(req.query.limit) || 2000, 5000);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const users = await User.find({})
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users' });
@@ -235,7 +248,14 @@ router.post('/events', async (req, res) => {
 // PUT /api/admin/events/:id
 router.put('/events/:id', async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const allowedFields = ['title', 'description', 'date', 'endDate', 'location', 'type',
+      'category', 'image', 'tags', 'capacity', 'registrationLink', 'isPublished', 'status',
+      'organizer', 'meetingLink', 'slug'];
+    const update = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+    const event = await Event.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!event) return res.status(404).json({ message: 'Event not found' });
     res.json(event);
   } catch (error) {
@@ -640,7 +660,13 @@ router.post('/skills', async (req, res) => {
 
 router.put('/skills/:id', async (req, res) => {
   try {
-    const skill = await Skill.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const allowedFields = ['name', 'description', 'category', 'careerGoals', 'prerequisites',
+      'difficulty', 'verificationPassScore', 'estimatedHours', 'icon', 'status', 'order'];
+    const update = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+    const skill = await Skill.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
     if (!skill) return res.status(404).json({ message: 'Skill not found.' });
     res.json(skill);
   } catch (err) { console.error(err); res.status(500).json({ message: 'Error updating skill.' }); }
@@ -709,7 +735,15 @@ router.post('/content', async (req, res) => {
 
 router.put('/content/:id', async (req, res) => {
   try {
-    const content = await LearningContent.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const allowedFields = ['title', 'skill', 'careerGoals', 'description', 'difficulty',
+      'estimatedMinutes', 'order', 'prerequisites', 'theoryContent', 'conceptSummary',
+      'commonMistakes', 'bestPractices', 'quizQuestions', 'quizPassScore', 'maxQuizAttempts',
+      'practiceTask', 'resources', 'status', 'isDiagnosticEligible', 'tags'];
+    const update = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+    const content = await LearningContent.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
     if (!content) return res.status(404).json({ message: 'Content not found.' });
     res.json(content);
   } catch (err) { console.error(err); res.status(500).json({ message: 'Error updating content.' }); }

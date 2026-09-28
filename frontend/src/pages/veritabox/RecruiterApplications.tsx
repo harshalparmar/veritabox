@@ -11,7 +11,7 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 
@@ -29,11 +29,12 @@ const STATUS_OPTIONS = ["Pending", "Interviewing", "Accepted", "Rejected"];
 export default function RecruiterApplications() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [applications, setApplications] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StatusFilter>("All");
-  const [jobFilter, setJobFilter] = useState("");
+  const [jobFilter, setJobFilter] = useState(() => searchParams.get("jobId") || "");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [feedbackMap, setFeedbackMap] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -41,6 +42,10 @@ export default function RecruiterApplications() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setJobFilter(searchParams.get("jobId") || "");
+  }, [searchParams]);
 
   const loadData = async () => {
     setLoading(true);

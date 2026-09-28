@@ -11,6 +11,7 @@ import NewsletterSubscriber from '../models/NewsletterSubscriber.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { safeEqual, isOtpLocked, registerOtpFailure, clearOtpFailures, OTP_LOCK_MINUTES } from '../utils/otpSecurity.js';
 import { hashOtp } from '../utils/security.js';
+import { invalidateUserCache } from '../utils/redis.js';
 
 const authLimiter = rateLimit({ windowMs: 15 * 60_000, max: 20, message: 'Too many authentication attempts. Try again in 15 minutes.' });
 
@@ -1016,6 +1017,8 @@ router.post('/reset-password', otpLimiter, async (req, res) => {
     user.resetPasswordExpires = null;
     clearOtpFailures(user);
     await user.save();
+    // Revoke previously issued sessions immediately (see passwordChangedAt).
+    await invalidateUserCache(user._id);
 
     res.json({ message: 'Password has been successfully reset' });
   } catch (error) {

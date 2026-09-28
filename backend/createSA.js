@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import SuperAdmin from './src/models/SuperAdmin.js';
 import speakeasy from 'speakeasy';
 import dotenv from 'dotenv';
+import { encrypt } from './src/utils/security.js';
 
 dotenv.config();
 
@@ -38,7 +39,7 @@ const createSA = async () => {
     const sa = new SuperAdmin({
       email,
       password,
-      totpSecret: secret.base32
+      totpSecret: encrypt(secret.base32)
     });
 
     await sa.save();
@@ -47,8 +48,6 @@ const createSA = async () => {
     console.log('SHADOW LAYER: INITIALIZED');
     console.log('==================================================');
     console.log(`Email:    ${email}`);
-    console.log(`Password: ${password}`);
-    console.log(`TOTP Secret (Base32): ${secret.base32}`);
     console.log('\nIMPORTANT: Scan this QR code URL in Google Authenticator:');
     console.log(secret.otpauth_url);
     console.log('==================================================\n');

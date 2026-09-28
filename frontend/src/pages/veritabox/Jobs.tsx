@@ -1,27 +1,24 @@
 import { useState, useEffect } from "react";
 import { PublicShell } from "@/components/veritabox/PublicShell";
-import { Surface, Pill, SectionTitle } from "@/components/veritabox/UI";
+import { Surface, Pill } from "@/components/veritabox/UI";
 import {
   Building2,
   MapPin,
   Wifi,
-  Clock,
   Loader2,
-  Search,
   Briefcase,
   IndianRupee,
   CalendarClock,
-  Users,
   ChevronRight,
-  FileText,
   ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { jobsApi } from "@/lib/api";
+import { SearchField } from "@/components/veritabox/SearchField";
+import { jobsApi, resolveAssetUrl } from "@/lib/api";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, formatDistanceToNow, isPast } from "date-fns";
+import { endOfDay, format, isAfter } from "date-fns";
 
 type TypeFilter = "All" | "Job" | "Internship" | "Contract";
 
@@ -100,11 +97,13 @@ export default function Jobs() {
       <div className="mx-auto max-w-[1300px] px-6 py-8">
         {/* Filters row */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-          <div className="flex items-center gap-2 flex-wrap mb-2">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab}
-                className={`flex items-center gap-2 text-[12px] px-3 py-1.5 border rounded transition-colors whitespace-nowrap shrink-0 ${ filter === tab ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary" }`}
+                  aria-pressed={filter === tab}
+                  className={`flex shrink-0 items-center gap-2 whitespace-nowrap border px-3 py-2 text-[12px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${ filter === tab ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground" }`}
                 onClick={() => setFilter(tab)}
               >
                 {tabLabels[tab]}
@@ -116,16 +115,14 @@ export default function Jobs() {
               </button>
             ))}
           </div>
-          <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search jobs, skills, location..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-3 py-1.5 bg-secondary border border-border rounded text-[12px] w-full sm:w-56 focus:outline-none focus:border-primary/50"
-            />
-          </div>
+          <SearchField
+            label="job opportunities"
+            placeholder="Search jobs, skills, location..."
+            value={search}
+            onChange={setSearch}
+            className="sm:max-w-sm"
+          />
+        </div>
         </div>
 
         {/* Summary bar */}
@@ -152,156 +149,65 @@ export default function Jobs() {
           <Surface className="p-10 text-center">
             <Briefcase className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-[13px] text-muted-foreground">
-              {search.trim()
-                ? "No jobs match your search."
-                : "No open opportunities right now. Check back soon!"}
+              {jobs.length === 0
+                ? "No open opportunities right now. Check back soon!"
+                : "No opportunities match these filters. Try another search or category."}
             </p>
           </Surface>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {filtered.map((job) => {
-              const appStatus = applications[job._id]?.status;
-              const isApplied = !!applications[job._id];
               const typeVariant =
                 job.type === "Internship"
                   ? "success"
                   : job.type === "Contract"
                   ? "warning"
                   : "primary";
-              const deadlinePast = job.deadline && isPast(new Date(job.deadline));
+              const deadlineDate = job.deadline ? new Date(job.deadline) : null;
+              const deadlinePast = deadlineDate
+                ? isAfter(new Date(), endOfDay(deadlineDate))
+                : false;
+
+              const jobTypeLabel = job.type === "Job" ? "Full-time" : job.type;
+              const jobSkills = (job.requiredSkills || []).map((skill: any) => skill.skillName || skill).filter(Boolean);
+              const companyLogo = job.companyLogo || job.recruiter?.companyLogo;
+              const applyPath = `/jobs/${job._id}?apply=1`;
 
               return (
-                <Surface
-                  key={job._id}
-                  hover
-                  className="p-4 sm:p-5 cursor-pointer transition-colors"
-                  onClick={() => navigate(`/jobs/${job._id}`)}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                    {/* Main content */}
-                    <div className="flex-1 min-w-0">
-                      {/* Title row */}
-                      <div className="flex items-start gap-2 mb-1.5">
-                        <h3 className="text-[14px] font-semibold leading-tight">
-                          {job.title}
-                        </h3>
-                        <Pill variant={typeVariant}>{job.type === "Job" ? "Full-time" : job.type}</Pill>
+                <Surface key={job._id} hover className="flex flex-col p-4 sm:p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div role="img" aria-label={companyLogo ? `${job.company} logo` : `${job.company} logo not available`} title={companyLogo ? `${job.company} logo` : "Company logo not available in this posting"} className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-secondary text-muted-foreground">
+                        <Building2 aria-hidden="true" className="h-5 w-5" />
+                        {companyLogo && <img src={resolveAssetUrl(companyLogo)} alt="" className="absolute inset-0 h-full w-full bg-card object-contain p-1" onError={(event) => { event.currentTarget.hidden = true; }} />}
                       </div>
-
-                      {/* Company & location */}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-[12px] text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Building2 className="h-3.5 w-3.5" />
-                          {job.company}
-                        </span>
-                        {job.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5" />
-                            {job.location}
-                          </span>
-                        )}
-                        {job.isRemote && (
-                          <span className="flex items-center gap-1 text-success">
-                            <Wifi className="h-3.5 w-3.5" />
-                            Remote
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Meta chips */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
-                        {job.experience && (
-                          <span className="flex items-center gap-1">
-                            <Briefcase className="h-3 w-3" />
-                            {job.experience}
-                          </span>
-                        )}
-                        {job.salary?.min != null && (
-                          <span className="flex items-center gap-1">
-                            <IndianRupee className="h-3 w-3" />
-                            {job.salary.currency || "INR"}{" "}
-                            {job.salary.min.toLocaleString()}
-                            {job.salary.max ? ` - ${job.salary.max.toLocaleString()}` : "+"}
-                          </span>
-                        )}
-                        {job.deadline && (
-                          <span
-                            className={`flex items-center gap-1 ${
-                              deadlinePast ? "text-danger" : ""
-                            }`}
-                          >
-                            <CalendarClock className="h-3 w-3" />
-                            {deadlinePast
-                              ? "Deadline passed"
-                              : `Due ${format(new Date(job.deadline), "MMM dd, yyyy")}`}
-                          </span>
-                        )}
-                        {(job.applicationCount ?? 0) > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {job.applicationCount} applied
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Skills */}
-                      {job.requiredSkills && job.requiredSkills.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {job.requiredSkills
-                            .slice(0, 6)
-                            .map((s: any, i: number) => (
-                              <span
-                                key={i}
-                                className="text-[10px] px-1.5 py-0.5 bg-secondary text-muted-foreground rounded"
-                              >
-                                {s.skillName || s}
-                              </span>
-                            ))}
-                          {job.requiredSkills.length > 6 && (
-                            <span className="text-[10px] text-muted-foreground self-center">
-                              +{job.requiredSkills.length - 6}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      <p className="truncate text-[12px] font-medium">{job.company}</p>
                     </div>
+                    <Pill variant={typeVariant}>{jobTypeLabel}</Pill>
+                  </div>
 
-                    {/* Right side — status + CTA */}
-                    <div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-3 shrink-0">
-                      {isApplied ? (
-                        <Pill
-                          variant={
-                            appStatus === "Accepted"
-                              ? "success"
-                              : appStatus === "Rejected"
-                              ? "danger"
-                              : appStatus === "Interviewing"
-                              ? "warning"
-                              : undefined
-                          }
-                        >
-                          {appStatus || "Applied"}
-                        </Pill>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="text-[11px] h-7 gap-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/jobs/${job._id}`);
-                          }}
-                        >
-                          View & Apply
-                          <ChevronRight className="h-3 w-3" />
-                        </Button>
-                      )}
-                      <span className="text-[10px] text-muted-foreground">
-                        {job.createdAt
-                          ? formatDistanceToNow(new Date(job.createdAt), {
-                              addSuffix: true,
-                            })
-                          : ""}
-                      </span>
+                  <h3 className="mt-4 line-clamp-2 text-[17px] font-semibold leading-snug">{job.title}</h3>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {job.experience && <span className="inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-[10px] text-muted-foreground"><Briefcase className="h-3 w-3" />{job.experience}</span>}
+                    {job.location && <span className="inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-[10px] text-muted-foreground"><MapPin className="h-3 w-3" />{job.location}</span>}
+                    {job.isRemote && !/remote/i.test(job.location || "") && <span className="inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-[10px] text-success"><Wifi className="h-3 w-3" />Remote</span>}
+                    {job.salary && (job.salary.min != null || job.salary.max != null) && <span className="inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-[10px] text-muted-foreground"><IndianRupee className="h-3 w-3" />{job.salary.currency || "INR"} {job.salary.min?.toLocaleString() ?? " - "}{job.salary.max != null ? ` - ${job.salary.max.toLocaleString()}` : "+"}</span>}
+                  </div>
+
+                  {job.description && <p className="mt-3 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">{job.description}</p>}
+                  {jobSkills.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{jobSkills.map((skill: string, index: number) => <span key={`${skill}-${index}`} className="rounded bg-secondary px-2 py-1 text-[10px] text-muted-foreground">{skill}</span>)}</div>}
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${deadlinePast ? "text-danger" : "text-success"}`}>
+                      <CalendarClock className="h-3.5 w-3.5" />
+                      {deadlinePast
+                        ? `Expired ${format(deadlineDate!, "dd-MM-yyyy")}`
+                        : `Open${deadlineDate ? ` · Apply by ${format(deadlineDate, "dd-MM-yyyy")}` : ""}`}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" className="h-8 text-[11px]" disabled={deadlinePast} onClick={() => navigate(user ? applyPath : `/auth?redirect=${encodeURIComponent(applyPath)}`)}>Apply</Button>
+                      <Button size="sm" className="h-8 gap-1.5 text-[11px]" onClick={() => navigate(`/jobs/${job._id}`)}>View Details<ChevronRight className="h-3 w-3" /></Button>
                     </div>
                   </div>
                 </Surface>

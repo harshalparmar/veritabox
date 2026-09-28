@@ -2,6 +2,7 @@ import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import { invalidateUserCache } from '../utils/redis.js';
 import User from '../models/User.js';
+import Admin from '../models/Admin.js';
 import HackathonTeam from '../models/HackathonTeam.js';
 import Project from '../models/Project.js';
 
@@ -89,7 +90,13 @@ router.get('/me', protect, async (req, res) => {
         populate: { path: 'localRoles.user', select: '_id' }
       });
 
-    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (!user) {
+      const admin = await Admin.findById(req.user._id)
+        .select('-password -adminToken -loginHistory')
+        .lean();
+      if (!admin) return res.status(404).json({ message: 'User not found.' });
+      return res.json({ ...admin, isOnboarded: true });
+    }
 
     if (user.profileId && user.profileModel) {
       await user.populate('profileId');
@@ -266,7 +273,7 @@ router.get('/profile/:identifier', async (req, res) => {
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       try {
         const token = req.headers.authorization.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
         requesterUser = await User.findById(decoded.id).select('role chapter');
       } catch (e) {
         // Ignore invalid tokens for public route
@@ -709,6 +716,9 @@ router.put('/password', protect, async (req, res) => {
 
     user.password = newPassword;
     await user.save();
+    // Drop the cached user so the new passwordChangedAt takes effect immediately,
+    // revoking any other sessions on the next request.
+    await invalidateUserCache(user._id);
     res.json({ message: 'Access credentials updated successfully.' });
   } catch (error) {
     res.status(500).json({ message: 'Fault updating password: ' + error.message });

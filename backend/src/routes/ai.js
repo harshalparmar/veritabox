@@ -196,9 +196,12 @@ ${livePageContext}
 });
 
 // POST /api/ai/resume - Resume Parsing & Recommendations
-router.post('/resume', protect, async (req, res) => {
+router.post('/resume', protect, dhritiLimiter, async (req, res) => {
   try {
     const { resumeText } = req.body;
+    if (typeof resumeText !== 'string' || resumeText.length === 0 || resumeText.length > 20000) {
+      return res.status(400).json({ message: 'resumeText is required and must be under 20000 characters.' });
+    }
     const user = await User.findById(req.user._id).select('-password');
     const progress = await ProgressRecord.findOne({ user: req.user._id });
     const projects = await Project.find({ 'members.user': req.user._id }).select('title description role');
@@ -252,10 +255,14 @@ router.post('/resume', protect, async (req, res) => {
 });
 
 // POST /api/ai/mock-interview - AI Mock Interview
-router.post('/mock-interview', protect, async (req, res) => {
+router.post('/mock-interview', protect, dhritiLimiter, async (req, res) => {
   try {
     const { question, answer } = req.body;
-    
+    if (typeof question !== 'string' || typeof answer !== 'string' ||
+        question.length > 5000 || answer.length > 10000) {
+      return res.status(400).json({ message: 'question and answer are required and must be within size limits.' });
+    }
+
     const systemPrompt = "You are a strict technical interviewer. Evaluate the user's answer to the question. Provide a short, constructive critique and state whether they 'Passed' or 'Failed' the question.";
     const userPrompt = `Question: ${question}\n\nMy Answer: ${answer}`;
     

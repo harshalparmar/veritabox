@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { PublicShell } from "@/components/veritabox/PublicShell";
 import { useReveal } from "@/hooks/use-reveal";
-import { Logo3D } from "@/components/Logo3D";
 import { BanterLoader } from "@/components/BanterLoader";
 import { useTheme } from "next-themes";
 import {
@@ -158,7 +157,7 @@ function GlowCard({ children, className = "" }: { children: React.ReactNode; cla
 /* ========================= COMPONENT ================================= */
 
 export default function VeritaBoxLanding() {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [cubeZoom, setCubeZoom] = useState(() => window.innerWidth < 1024 ? 270 : 360);
   const [activeStep, setActiveStep] = useState(0);
 
@@ -173,11 +172,104 @@ export default function VeritaBoxLanding() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const isDark = theme === "dark";
+  const isDark = resolvedTheme === "dark";
 
   return (
     <PublicShell>
       <style>{`
+        @keyframes hero-arrive {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes hero-drift {
+          from { transform: translate3d(-1%, 0, 0); }
+          to { transform: translate3d(1%, 1.5%, 0); }
+        }
+        .landing-hero::before {
+          content: "";
+          position: absolute;
+          z-index: 0;
+          inset: 0 0 0 auto;
+          width: min(58rem, 85vw);
+          pointer-events: none;
+          background-image:
+            linear-gradient(hsl(var(--foreground) / .055) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--foreground) / .055) 1px, transparent 1px);
+          background-size: 34px 34px;
+          mask-image: linear-gradient(90deg, transparent, #000 30%, #000 82%, transparent);
+          animation: hero-drift 24s ease-in-out infinite alternate;
+        }
+        .landing-hero-copy > * {
+          animation: hero-arrive .8s cubic-bezier(.2, .75, .25, 1) both;
+        }
+        .landing-hero-copy > :nth-child(1) { animation-delay: 80ms; }
+        .landing-hero-copy > :nth-child(2) { animation-delay: 180ms; }
+        .landing-hero-copy > :nth-child(3) { animation-delay: 280ms; }
+        .landing-hero-copy > :nth-child(4) { animation-delay: 360ms; }
+        .hero-stat {
+          animation: hero-arrive .7s cubic-bezier(.2, .75, .25, 1) both;
+        }
+        .hero-cta {
+          box-shadow: 0 2px 8px hsl(var(--foreground) / .08);
+        }
+        .hero-cta:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 22px hsl(var(--foreground) / .14);
+        }
+        .hero-cta:focus-visible {
+          outline: 2px solid hsl(var(--primary));
+          outline-offset: 4px;
+        }
+        .hero-heading__base,
+        .hero-heading__emphasis,
+        .hero-heading__accent {
+          display: inline;
+          color: transparent;
+          -webkit-background-clip: text;
+          background-clip: text;
+          background-size: 100% 100%, 240% 100%;
+          background-position: 0 0, 100% 0;
+          background-repeat: no-repeat;
+          animation: hero-heading-glint 8s ease-in-out infinite;
+        }
+        .hero-heading__base {
+          background-image:
+            linear-gradient(hsl(var(--foreground)), hsl(var(--foreground))),
+            linear-gradient(105deg, transparent 0%, transparent 43%, hsl(158 55% 82% / .3) 47%, hsl(158 55% 90% / .82) 50%, hsl(158 55% 82% / .3) 53%, transparent 57%, transparent 100%);
+          text-shadow: 0 0 26px hsl(158 68% 48% / .12), 0 0 64px hsl(158 68% 48% / .07);
+        }
+        .hero-heading__emphasis {
+          background-image:
+            linear-gradient(hsl(var(--foreground)), hsl(var(--foreground))),
+            linear-gradient(105deg, transparent 0%, transparent 43%, hsl(158 55% 82% / .3) 47%, hsl(158 55% 90% / .82) 50%, hsl(158 55% 82% / .3) 53%, transparent 57%, transparent 100%);
+          text-shadow: 0 0 26px hsl(158 68% 48% / .12), 0 0 64px hsl(158 68% 48% / .07);
+        }
+        .hero-heading__accent {
+          background-image:
+            linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary)), #10b981),
+            linear-gradient(105deg, transparent 0%, transparent 43%, hsl(158 78% 62% / .28) 47%, hsl(158 78% 74% / .72) 50%, hsl(158 78% 62% / .28) 53%, transparent 57%, transparent 100%);
+          text-shadow: 0 0 26px hsl(158 78% 48% / .15), 0 0 64px hsl(158 78% 48% / .09);
+        }
+        @keyframes hero-heading-glint {
+          0%, 69% { background-position: 0 0, 100% 0; }
+          84%, 100% { background-position: 0 0, 0 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .landing-hero::before,
+          .landing-hero-copy > *,
+          .hero-stat,
+          .hero-heading__base,
+          .hero-heading__emphasis,
+          .hero-heading__accent {
+            animation: none;
+          }
+          .hero-heading__base,
+          .hero-heading__emphasis,
+          .hero-heading__accent {
+            background-position: 0 0, 100% 0;
+          }
+          .hero-cta:hover { transform: none; }
+        }
         @keyframes pulse-flow {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(300%); }
@@ -188,16 +280,15 @@ export default function VeritaBoxLanding() {
       `}</style>
 
       {/* ===================== HERO ===================== */}
-      <section className="relative z-10 pt-16 pb-0 px-6 overflow-hidden">
+      <section className="landing-hero relative z-10 pt-16 pb-0 px-6 overflow-hidden">
         <div className="mx-auto max-w-[1200px] relative">
           <div className="pt-[52px] pb-20 relative flex">
-            {/* Left — text */}
-            <div className="relative z-[3] flex-1 min-w-0 max-w-[560px]">
-              <h1 className="text-[clamp(2.2rem,4.5vw,3.4rem)] font-[500] leading-[1.08] tracking-[-0.04em] text-foreground max-w-[560px]">
-                One platform for{" "}
-                <span className="bg-gradient-to-r from-primary via-primary to-emerald-500 bg-clip-text text-transparent font-semibold">
-                  learning, building & competing.
-                </span>
+            {/* Left  -  text */}
+            <div className="landing-hero-copy relative z-[3] flex-1 min-w-0 max-w-[560px]">
+              <h1 className="text-[40px] sm:text-[48px] lg:text-[54px] font-[500] leading-[1.08] tracking-normal text-foreground max-w-[560px]">
+                <span className="hero-heading__base">One platform for </span>
+                <span className="hero-heading__emphasis font-semibold">learning, building &amp; </span>
+                <span className="hero-heading__accent font-semibold">competing.</span>
               </h1>
 
               <p className="mt-6 text-[15px] leading-relaxed text-muted-foreground max-w-[480px]">
@@ -208,7 +299,7 @@ export default function VeritaBoxLanding() {
 
               <div className="mt-10 flex items-center gap-4 flex-wrap">
                 <Link to="/register">
-                  <button className="group relative inline-flex items-center gap-2 px-6 py-3 text-[14px] font-medium bg-foreground text-background transition-all duration-200 hover:bg-foreground/90 rounded-md">
+                  <button className="hero-cta group relative inline-flex items-center gap-2 px-6 py-3 text-[14px] font-medium bg-foreground text-background transition-all duration-200 hover:bg-foreground/90 rounded-md">
                     Enlist Now
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </button>
@@ -218,13 +309,14 @@ export default function VeritaBoxLanding() {
               {/* Inline stats */}
               <div className="mt-12 flex gap-8">
                 {stats.map((s) => (
-                  <div key={s.label}>
+                  <div key={s.label} className="hero-stat" style={{ animationDelay: `${440 + stats.indexOf(s) * 90}ms` }}>
                     <div className="text-[22px] font-semibold tracking-tight text-foreground">{s.value}</div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">{s.desc}</div>
                   </div>
                 ))}
               </div>
             </div>
+
 
             {/* Mobile 3D cube */}
             <div className="absolute inset-0 flex items-center justify-center z-[1] opacity-55 dark:opacity-45 md:hidden pointer-events-none">

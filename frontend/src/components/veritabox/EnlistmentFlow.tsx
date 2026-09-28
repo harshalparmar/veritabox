@@ -76,7 +76,7 @@ const PERSONA_OPTIONS: { id: Persona; label: string; icon: any; desc: string }[]
   { id: "Teacher", label: "Teacher / Educator", icon: BookOpen, desc: "Teaching & guiding" },
 ];
 
-export function EnlistmentFlow() {
+export function EnlistmentFlow({ returnTo }: { returnTo?: string | null }) {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -84,13 +84,13 @@ export function EnlistmentFlow() {
   const [step, setStep] = useState<Step>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Step 1 — Identity
+  // Step 1  -  Identity
   const [username, setUsername] = useState("");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [persona, setPersona] = useState<Persona>("Student");
 
-  // Step 2 — Persona-specific
+  // Step 2  -  Persona-specific
   // Student
   const [eduInstitutionName, setEduInstitutionName] = useState("");
   const [academicTrack, setAcademicTrack] = useState("");
@@ -118,7 +118,7 @@ export function EnlistmentFlow() {
   const [teacherExperience, setTeacherExperience] = useState("0");
   const [teacherPreferredSkills, setTeacherPreferredSkills] = useState<string[]>([]);
 
-  // Step 3 — Interests
+  // Step 3  -  Interests
   const [interests, setInterests] = useState<string[]>([]);
 
   useEffect(() => {
@@ -274,7 +274,8 @@ export function EnlistmentFlow() {
       await usersApi.completeOnboarding(persona, profileData, baseData);
       await refreshUser();
       toast({ title: "Welcome to VeritaBox!", description: "Your profile is ready. Let's get started." });
-      navigate("/dashboard");
+      const canReturnToJob = persona === "Student" || persona === "Professional";
+      navigate(canReturnToJob && returnTo ? returnTo : "/dashboard", { replace: true });
     } catch (error: any) {
       toast({ title: "Setup Failed", description: error.message, variant: "destructive" });
     } finally {

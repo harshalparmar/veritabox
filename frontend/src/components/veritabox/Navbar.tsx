@@ -157,7 +157,7 @@ function AuthedNav({ hideLogo = false, onMenuClick, fullWidth = false }: { hideL
         {/* Logo + primary links */}
         <div className={cn("items-center gap-4 shrink-0", hideLogo ? "flex md:hidden" : "flex")}>
           <Link to="/dashboard" className="flex items-center gap-2">
-            <VeritaBoxLogo className="h-6 text-foreground hidden sm:inline-block" />
+            <VeritaBoxLogo className="h-6 text-foreground" />
           </Link>
           
           <div className="h-4 w-px bg-border/50 hidden md:block" />

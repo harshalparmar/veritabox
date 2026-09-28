@@ -87,7 +87,9 @@ export const sendOTPEmail = async (email, otp) => {
 
     const result = await plunk.emails.send({
       to: email,
-      subject: `Verify Identity: ${otp}`,
+      // Keep the OTP out of the subject line — subjects surface on lock screens,
+      // notification previews, and mail-server logs. The code lives in the body.
+      subject: 'Your VeritaBox verification code',
       body: html,
       from: "security@veritabox.com",
       name: "VeritaBox Security"

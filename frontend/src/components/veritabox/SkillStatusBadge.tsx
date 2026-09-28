@@ -1,4 +1,4 @@
-/** SkillStatusBadge — Renders a badge for any skill verification status */
+/** SkillStatusBadge  -  Renders a badge for any skill verification status */
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {

@@ -286,7 +286,7 @@ function EnrolledDashboard({ comp, enrollment, squadronDetails, squadronLoading,
   const queryClient = useQueryClient();
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Proper ObjectId comparison — leaderId is a populated object or raw string
+  // Proper ObjectId comparison  -  leaderId is a populated object or raw string
   const leaderId = squadronDetails?.leaderId?._id || squadronDetails?.leaderId;
   const isLeader = reg.participationType === 'Squadron' && leaderId?.toString() === user._id?.toString();
 
@@ -371,7 +371,7 @@ function EnrolledDashboard({ comp, enrollment, squadronDetails, squadronLoading,
                 <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-1 flex items-center gap-1">
                   <Users className="h-3 w-3" /> Squadron
                 </div>
-                <div className="font-bold text-base">{squadronDetails?.name || reg.squadronId?.name || '—'}</div>
+                <div className="font-bold text-base">{squadronDetails?.name || reg.squadronId?.name || ' - '}</div>
               </div>
               {pendingCount > 0 && isLeader && (
                 <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase bg-warning/10 text-warning border border-warning/20 px-2 py-1 rounded-full">

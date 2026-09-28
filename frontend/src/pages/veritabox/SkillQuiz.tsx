@@ -1,6 +1,6 @@
 /**
- * SkillQuiz.tsx — Quiz taking interface for learning content.
- * Server-side grading — never trusts frontend score.
+ * SkillQuiz.tsx  -  Quiz taking interface for learning content.
+ * Server-side grading  -  never trusts frontend score.
  */
 
 import { useState, useEffect } from "react";
@@ -228,7 +228,7 @@ export default function SkillQuiz() {
             </button>
             <div className="flex items-center gap-2 mb-1.5">
               <Cpu className="h-4 w-4 text-primary" />
-              <h1 className="text-lg font-semibold">{quizData.title} — Quiz</h1>
+              <h1 className="text-lg font-semibold">{quizData.title}  -  Quiz</h1>
             </div>
             <div className="flex items-center gap-2">
               <Progress value={progress} className="flex-1 h-1" />

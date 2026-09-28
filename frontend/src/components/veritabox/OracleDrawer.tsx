@@ -51,7 +51,7 @@ export function OracleDrawer({ open, onOpenChange, context }: OracleDrawerProps)
     setInput("");
     setIsThinking(true);
 
-    // Placeholder for AI logic — in a real setup, this would call an LLM API
+    // Placeholder for AI logic  -  in a real setup, this would call an LLM API
     setTimeout(() => {
       const assistantMsg: Message = { 
         role: "assistant", 

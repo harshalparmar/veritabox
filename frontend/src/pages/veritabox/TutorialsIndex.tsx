@@ -9,6 +9,7 @@ import {
   Clock, Eye, Bookmark, BookmarkCheck,
   Code2, Loader2, CheckCircle2, Menu, X, Filter
 } from "lucide-react";
+import { SearchField } from "@/components/veritabox/SearchField";
 
 // Types
 interface Category { _id: string; name: string; slug: string; description?: string; parentCategory?: string; }
@@ -202,17 +203,13 @@ export default function TutorialsIndex() {
         {/* Sidebar */}
         <div className={`w-full md:w-64 shrink-0 space-y-6 ${isMobileSidebarOpen ? 'block' : 'hidden md:block'}`}>
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search tutorials..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-secondary/30 border border-border rounded-md py-2 pl-9 pr-4 text-[13px] focus:outline-none focus:border-primary/50 transition-colors"
-            />
-            {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 animate-spin text-muted-foreground" />}
-          </div>
+          <SearchField
+            label="tutorials"
+            placeholder="Search tutorials..."
+            value={search}
+            onChange={setSearch}
+            isLoading={searchLoading}
+          />
 
           <div className="space-y-4">
             <div className="px-2">

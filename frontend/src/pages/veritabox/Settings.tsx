@@ -1220,13 +1220,13 @@ function Field({ id, label, icon: Icon, children }: { id: string; label: string;
 
 function Toggle({ label, sublabel, checked, onChange }: { label: string; sublabel?: string; checked: boolean; onChange: (v: boolean) => void }) {
    return (
-      <div onClick={() => onChange(!checked)} className={cn("flex items-center gap-2 text-[12px] px-3 py-1.5 border rounded transition-colors", checked ? "bg-foreground text-background border-foreground" : "border-border text-muted-foreground hover:text-foreground hover:bg-secondary")}>
+      <div onClick={() => onChange(!checked)} className="flex items-center justify-between gap-4 p-3 border border-border/60 rounded-lg hover:border-border cursor-pointer transition-colors bg-card/20">
          <div className="space-y-0.5">
-            <div className={cn("text-[11px] font-medium", checked ? "text-foreground" : "text-muted-foreground")}>{label}</div>
-            {sublabel && <p className="text-[9px] text-muted-foreground">{sublabel}</p>}
+            <div className="text-[12px] font-medium text-foreground">{label}</div>
+            {sublabel && <p className="text-[11px] text-muted-foreground">{sublabel}</p>}
          </div>
-         <div className={cn("h-5 w-9 rounded-full p-0.5 transition-colors", checked ? "bg-primary" : "bg-border")}>
-            <div className={cn("h-4 w-4 rounded-full bg-white transition-transform shadow-sm", checked ? "translate-x-4" : "translate-x-0")} />
+         <div className={cn("relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors", checked ? "bg-primary" : "bg-muted")}>
+            <div className={cn("inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform", checked ? "translate-x-4" : "translate-x-0.5")} />
          </div>
       </div>
    );

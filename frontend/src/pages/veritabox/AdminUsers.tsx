@@ -129,7 +129,7 @@ export default function AdminUsers() {
 
       <PageContent>
         <div className="space-y-6">
-          {/* Registry switch — Operatives (Student/Teacher/Professional) vs Recruiters */}
+          {/* Registry switch  -  Operatives (Student/Teacher/Professional) vs Recruiters */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => switchRegistry('operatives')}

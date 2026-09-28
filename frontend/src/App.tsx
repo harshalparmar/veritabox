@@ -13,7 +13,7 @@ import Settings from "./pages/veritabox/Settings";
 import NotFound from "./pages/NotFound";
 import { Suspense } from "react";
 
-// VeritaBox — public
+// VeritaBox  -  public
 import Hackathons from "./pages/veritabox/Hackathons";
 import HackathonDetail from "./pages/veritabox/HackathonDetail";
 import SquadronProfile from "./pages/veritabox/SquadronProfile";
@@ -42,21 +42,21 @@ import SkillQuiz from "./pages/veritabox/SkillQuiz";
 import DiagnosticAssessment from "./pages/veritabox/DiagnosticAssessment";
 import ResumeAnalyzer from "./pages/veritabox/ResumeAnalyzer";
 
-// VeritaBox — info
+// VeritaBox  -  info
 import About from "./pages/veritabox/info/About";
-import Community from "./pages/veritabox/info/Community";
+
 import Contact from "./pages/veritabox/info/Contact";
-import Docs from "./pages/veritabox/info/Docs";
+
 import Platform from "./pages/veritabox/info/Platform";
-import Status from "./pages/veritabox/info/Status";
-import Stats from "./pages/veritabox/Stats";
+
+
 import Terms from "./pages/veritabox/info/Terms";
 import Privacy from "./pages/veritabox/info/Privacy";
 import Cookies from "./pages/veritabox/info/Cookies";
 import Conduct from "./pages/veritabox/info/Conduct";
 
 
-// VeritaBox — app
+// VeritaBox  -  app
 import MissionControl from "./pages/veritabox/MissionControl";
 import Mainnet from "./pages/veritabox/Mainnet";
 import Bounties from "./pages/veritabox/Bounties";
@@ -143,6 +143,18 @@ const RecruiterJobRedirect = () => {
   return <Navigate to={`/jobs/${id}`} replace />;
 };
 
+function JobsIndexRoute() {
+  const { user } = useAuth();
+  return user?.role === "Recruiter" ? <RecruiterJobs /> : <Jobs />;
+}
+
+function JobPostingRoute() {
+  const { user } = useAuth();
+  return user?.role === "Recruiter"
+    ? <ProtectedRoute><RecruiterJobNew /></ProtectedRoute>
+    : <JobDetail />;
+}
+
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
 
@@ -170,7 +182,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <ScrollToTop />
               <AuthProvider>
                 <SocketProvider>
@@ -187,9 +199,9 @@ const App = () => {
                       <Route path='/resume-analyzer' element={<ProtectedRoute deniedRoles={["Teacher"]}><ResumeAnalyzer /></ProtectedRoute>} />
                       <Route path='/events' element={<Events />} />
                       <Route path='/events/:slug' element={<EventDetail />} />
-                      <Route path='/jobs' element={<Jobs />} />
+                      <Route path='/jobs' element={<JobsIndexRoute />} />
                       <Route path='/jobs/applications' element={<ProtectedRoute><MyApplications /></ProtectedRoute>} />
-                      <Route path='/jobs/:id' element={<JobDetail />} />
+                      <Route path='/jobs/:id' element={<JobPostingRoute />} />
                       <Route path='/settings' element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                       <Route path="/" element={<Index />} />
                       <Route path="/auth" element={<Auth />} />
@@ -205,9 +217,7 @@ const App = () => {
                       <Route path="/recruiter/talent" element={<Navigate to="/talent" replace />} />
                       <Route path="/recruiter/applications" element={<Navigate to="/applications" replace />} />
 
-                      <Route path="/jobs" element={<ProtectedRoute><RecruiterJobs /></ProtectedRoute>} />
                       <Route path="/jobs/new" element={<ProtectedRoute><RecruiterJobNew /></ProtectedRoute>} />
-                      <Route path="/jobs/:id" element={<ProtectedRoute><RecruiterJobNew /></ProtectedRoute>} />
                       <Route path="/talent" element={<ProtectedRoute><RecruiterTalent /></ProtectedRoute>} />
                       <Route path="/applications" element={<ProtectedRoute><RecruiterApplications /></ProtectedRoute>} />
 
@@ -240,9 +250,9 @@ const App = () => {
                       <Route path="/bounties" element={<ProtectedRoute><Bounties /></ProtectedRoute>} />
                       <Route path="/bounties/:id" element={<ProtectedRoute><BountyDetail /></ProtectedRoute>} />
 
-                      <Route path="/forge" element={<ProtectedRoute><Forge /></ProtectedRoute>} />
+                      <Route path="/forge" element={<Forge />} />
                       <Route path="/forge/leaderboard" element={<Navigate to="/leaderboard?tab=forge" replace />} />
-                      <Route path="/forge/:id" element={<ProtectedRoute><ForgeChallenge /></ProtectedRoute>} />
+                      <Route path="/forge/:id" element={<ForgeChallenge />} />
 
                       <Route path="/lab" element={<Lab />} />
                       <Route path="/lab/new" element={<ProtectedRoute><LabNew /></ProtectedRoute>} />
@@ -268,7 +278,7 @@ const App = () => {
                       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
                       <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
                       
-                      {/* Admin Routes — protected by ProtectedRoute (JWT + admin role) */}
+                      {/* Admin Routes  -  protected by ProtectedRoute (JWT + admin role) */}
                       <Route path='/cmd' element={<ProtectedRoute><AdminHome /></ProtectedRoute>} />
                       <Route path='/cmd/events' element={<ProtectedRoute><AdminEvents /></ProtectedRoute>} />
                       <Route path='/cmd/events/:id/manage' element={<ProtectedRoute><AdminEventManagement /></ProtectedRoute>} />
@@ -300,12 +310,12 @@ const App = () => {
 
                       {/* Info Pages */}
                       <Route path="/about" element={<About />} />
-                      <Route path="/community" element={<Community />} />
+
                       <Route path="/contact" element={<Contact />} />
-                      <Route path="/docs" element={<Docs />} />
+
                       <Route path="/platform" element={<Platform />} />
-                      <Route path="/status" element={<Status />} />
-                      <Route path="/stats" element={<Stats />} />
+
+
                       <Route path="/terms" element={<Terms />} />
                       <Route path="/privacy" element={<Privacy />} />
                       <Route path="/cookies" element={<Cookies />} />

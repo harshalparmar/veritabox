@@ -72,6 +72,7 @@ const hackathonSchema = new mongoose.Schema({
   rounds: [roundSchema],
   description: String,
   bannerImage: String,
+  thumbnailImage: String,
   rulebookUrl: String,
   rules: [String],
   type: {

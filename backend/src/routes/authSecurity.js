@@ -31,12 +31,9 @@ router.post('/2fa/setup', protect, async (req, res) => {
       name: `VeritaBox:${user.universityId}`,
     });
 
-    try {
-      user.twoFactorSecret = encrypt(secret.base32);
-    } catch (e) {
-      // Fall back to plaintext if ENCRYPTION_KEY is not set
-      user.twoFactorSecret = secret.base32;
-    }
+    // Never store the TOTP secret in plaintext. If encryption is unavailable
+    // we fail the request rather than silently persisting a readable secret.
+    user.twoFactorSecret = encrypt(secret.base32);
     await user.save();
 
     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
@@ -374,11 +371,17 @@ router.post('/social/unlink', protect, async (req, res) => {
 // @access  Private (rate-limited)
 router.post('/2fa/lost-request', lost2faLimiter, protect, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, password } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (!user.isTwoFactorEnabled) return res.status(400).json({ message: '2FA is not enabled' });
+
+    // Require password re-authentication: a stolen session token alone must not
+    // be enough to disable 2FA. The user must also prove they know the password.
+    if (!password || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Password verification required to reset 2FA.' });
+    }
 
     // Verify email if provided
     if (email && email !== user.email && email !== user.universityId) {

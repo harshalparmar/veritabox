@@ -1181,7 +1181,7 @@ function AllWorkshopsTable({ workshops, onEdit, onViewRsvps, onDelete, isDeletin
           </div>
 
           <div className="col-span-2 min-w-0">
-            <div className="text-[11px] text-muted-foreground truncate">{w.chapter?.name || "—"}</div>
+            <div className="text-[11px] text-muted-foreground truncate">{w.chapter?.name || " - "}</div>
           </div>
 
           <div className="col-span-2">

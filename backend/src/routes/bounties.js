@@ -118,7 +118,13 @@ router.put('/:id/resolve', protect, isAdmin, async (req, res) => {
 // PUT /api/bounties/:id - Update mission brief (Admin Only)
 router.put('/:id', protect, isAdmin, async (req, res) => {
   try {
-    const bounty = await Bounty.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const allowedFields = ['title', 'description', 'techStack', 'pointReward', 'difficulty',
+      'status', 'assignedTo', 'chapterId', 'isChapterExclusive'];
+    const update = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+    const bounty = await Bounty.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!bounty) return res.status(404).json({ message: 'Target bounty missing.' });
     res.json(bounty);
   } catch (error) {

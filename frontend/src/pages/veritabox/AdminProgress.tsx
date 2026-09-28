@@ -1,5 +1,5 @@
 /**
- * AdminProgress.tsx — Admin panel for Learning Content Management
+ * AdminProgress.tsx  -  Admin panel for Learning Content Management
  */
 
 import { useState, useEffect } from "react";
@@ -896,7 +896,7 @@ export default function AdminProgress() {
                           </div>
                         ) : (
                           <div className="text-[12px] bg-secondary/30 p-3 border border-border rounded-md">
-                            <p><span className="font-medium">Score:</span> {sub.score ?? "—"}/100</p>
+                            <p><span className="font-medium">Score:</span> {sub.score ?? " - "}/100</p>
                             {sub.feedback && <p className="mt-1"><span className="font-medium">Feedback:</span> {sub.feedback}</p>}
                             {sub.reviewedAt && <p className="mt-1 text-muted-foreground">Reviewed: {new Date(sub.reviewedAt).toLocaleDateString()}</p>}
                           </div>
@@ -926,7 +926,7 @@ export default function AdminProgress() {
                         <form onSubmit={handleCreatePulse} className="space-y-4 pt-2">
                           <div className="space-y-2">
                             <Label>Title *</Label>
-                            <Input value={newPulse.title} onChange={e => setNewPulse({ ...newPulse, title: e.target.value })} placeholder="e.g. Hackathon 2026 — Register Now" required />
+                            <Input value={newPulse.title} onChange={e => setNewPulse({ ...newPulse, title: e.target.value })} placeholder="e.g. Hackathon 2026  -  Register Now" required />
                           </div>
                           <div className="space-y-2">
                             <Label>Body *</Label>

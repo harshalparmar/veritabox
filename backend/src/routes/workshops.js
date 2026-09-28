@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, isAdmin } from '../middleware/authMiddleware.js';
+import { protect, isAdmin, optionalProtect } from '../middleware/authMiddleware.js';
 import Workshop from '../models/Workshop.js';
 import Chapter from '../models/Chapter.js';
 import User from '../models/User.js';
@@ -7,6 +7,7 @@ import ReputationLog from '../models/ReputationLog.js';
 import slugify from 'slugify';
 import mongoose from 'mongoose';
 import { createNotification } from '../utils/notify.js';
+import { escapeRegex } from '../utils/security.js';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const canManageChapterWorkshops = async (user, chapterId) => {
  * @desc    Get workshops (public = only approved/live/completed; leads see their pending too)
  * @access  Public
  */
-router.get('/', async (req, res) => {
+router.get('/', optionalProtect, async (req, res) => {
   try {
     const { chapter, status, search, all } = req.query;
     const query = {};
@@ -34,18 +35,32 @@ router.get('/', async (req, res) => {
       if (chap) query.chapter = chap._id;
     }
 
-    if (status) {
-      query.status = status;
-    } else if (!all) {
-      // Default: only show publicly visible workshops
-      query.status = { $in: ['Upcoming', 'Live', 'Completed'] };
+    // Only privileged roles may see non-public statuses (e.g. Pending, Cancelled)
+    // or use the `all` override. Everyone else is restricted to public statuses.
+    const PUBLIC_STATUSES = ['Upcoming', 'Live', 'Completed'];
+    const canSeeAll = req.user && ['Admin', 'Founder', 'Teacher'].includes(req.user.role);
+
+    if (canSeeAll) {
+      if (status) {
+        query.status = status;
+      } else if (!all) {
+        query.status = { $in: PUBLIC_STATUSES };
+      }
+    } else {
+      // Public/regular users: force public statuses, ignore status/all overrides.
+      if (status && PUBLIC_STATUSES.includes(String(status))) {
+        query.status = status;
+      } else {
+        query.status = { $in: PUBLIC_STATUSES };
+      }
     }
 
     if (search) {
+      const safe = escapeRegex(search);
       const searchCondition = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { title: { $regex: safe, $options: 'i' } },
+        { description: { $regex: safe, $options: 'i' } },
+        { tags: { $in: [new RegExp(safe, 'i')] } }
       ];
       query.$or = searchCondition;
     }
@@ -349,9 +364,14 @@ router.post('/:id/attendance', protect, async (req, res) => {
     const chapter = await Chapter.findById(workshop.chapter);
     const xpToAward = workshop.xpReward ?? 50;
 
+    // Only registered attendees may be checked in — a lead cannot grant XP to
+    // arbitrary users who never registered for the workshop.
+    const registered = new Set((workshop.attendees || []).map(id => id.toString()));
+    const validCheckedIns = checkedInUserIds.filter(userId => registered.has(userId.toString()));
+
     // Only award XP to users not already checked in (prevent double awards)
     const alreadyCheckedIn = new Set(workshop.checkedInAttendees.map(id => id.toString()));
-    const newCheckedIns = checkedInUserIds.filter(userId => !alreadyCheckedIn.has(userId.toString()));
+    const newCheckedIns = validCheckedIns.filter(userId => !alreadyCheckedIn.has(userId.toString()));
 
     let chapterXpGained = 0;
 

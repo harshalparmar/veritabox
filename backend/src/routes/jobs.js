@@ -78,7 +78,13 @@ router.get('/recruiter/applications', protect, requireRecruiter, async (req, res
     const jobIds = jobs.map(j => j._id);
     const query = { job: { $in: jobIds } };
     if (req.query.status && req.query.status !== 'all') query.status = req.query.status;
-    if (req.query.jobId) query.job = req.query.jobId;
+    // Only allow narrowing to a jobId the recruiter actually owns — never let a
+    // client-supplied jobId widen access to another recruiter's applications.
+    if (req.query.jobId) {
+      const owns = jobIds.some(id => id.toString() === String(req.query.jobId));
+      if (!owns) return res.status(403).json({ message: 'Not authorized for this job.' });
+      query.job = req.query.jobId;
+    }
 
     const applications = await JobApplication.find(query)
       .sort({ createdAt: -1 })
@@ -135,10 +141,10 @@ router.get('/recruiter/job/:jobId', protect, requireRecruiter, async (req, res) 
 // POST /api/jobs - Recruiter posts a job
 router.post('/', protect, requireRecruiter, async (req, res) => {
   try {
-    const { title, company, description, type, requiredSkills, location, isRemote, salary,
+    const { title, company, companyLogo, description, type, requiredSkills, location, isRemote, salary,
       experience, deadline, status } = req.body;
     const job = new JobOpportunity({
-      title, company, description, type, requiredSkills, location, isRemote, salary,
+      title, company, companyLogo, description, type, requiredSkills, location, isRemote, salary,
       experience, deadline, status,
       recruiter: req.user._id
     });
@@ -169,7 +175,7 @@ router.put('/:jobId', protect, requireRecruiter, async (req, res) => {
     if (job.recruiter.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
       return res.status(403).json({ message: 'Not your job posting' });
     }
-    const allowed = ['title', 'company', 'description', 'type', 'requiredSkills', 'location', 'isRemote', 'salary', 'experience', 'deadline', 'status'];
+    const allowed = ['title', 'company', 'companyLogo', 'description', 'type', 'requiredSkills', 'location', 'isRemote', 'salary', 'experience', 'deadline', 'status'];
     allowed.forEach(field => { if (req.body[field] !== undefined) job[field] = req.body[field]; });
     await job.save();
     res.json(job);
@@ -193,7 +199,16 @@ router.get('/my-applications', protect, async (req, res) => {
 // GET /api/jobs - List all open jobs (public)
 router.get('/', optionalProtect, async (req, res) => {
   try {
-    const jobs = await JobOpportunity.find({ status: 'Open' }).populate('recruiter', 'name companyName');
+    const fields = [
+      'title', 'company', 'companyLogo', 'description', 'type', 'requiredSkills',
+      'location', 'isRemote', 'salary', 'experience', 'deadline', 'applicationCount',
+      'status', 'createdAt', 'updatedAt'
+    ];
+    if (req.user) fields.push('recruiter');
+
+    const query = JobOpportunity.find({ status: 'Open' }).select(fields.join(' '));
+    if (req.user) query.populate('recruiter', 'name companyName');
+    const jobs = await query;
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching jobs: ' + error.message });

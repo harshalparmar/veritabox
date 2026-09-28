@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { PublicShell } from "@/components/veritabox/PublicShell";
 import { Surface, Pill } from "@/components/veritabox/UI";
-import { MapPin, Users, Trophy, Search, Plus, Loader2, Globe, Shield } from "lucide-react";
+import { MapPin, Users, Trophy, Search, Plus, Loader2, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { chaptersApi, Chapter, resolveAssetUrl } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { SearchField } from "@/components/veritabox/SearchField";
 
 export default function Chapters() {
   const { profile } = useAuth();
@@ -71,17 +72,8 @@ export default function Chapters() {
       </div>
 
       <div className="mx-auto max-w-[1300px] px-6 py-8">
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <input 
-              type="text"
-              placeholder="Search by university, city, or sector..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-9 bg-card/50 border border-border pl-10 pr-4 text-[12px] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all rounded placeholder:text-muted-foreground/50"
-            />
-          </div>
+        <div className="mb-6 max-w-2xl">
+          <SearchField label="institutes" placeholder="Search by university, city, or institute..." value={searchQuery} onChange={setSearchQuery} />
         </div>
 
         {loading ? (

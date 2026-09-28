@@ -1,5 +1,5 @@
 /**
- * Progress.tsx — Real database-backed progress dashboard.
+ * Progress.tsx  -  Real database-backed progress dashboard.
  * Replaces hardcoded mockSkills with real API data.
  * Daily and Weekly views. Skill progression. Learning journey.
  */

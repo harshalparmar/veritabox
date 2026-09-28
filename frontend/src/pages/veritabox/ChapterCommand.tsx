@@ -454,8 +454,8 @@ export default function ChapterCommand() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Pill variant="success" className="text-[9px] uppercase tracking-wider font-bold h-5 px-2">ONLINE</Pill>
-                        <Pill variant="info" className="text-[9px] uppercase tracking-wider font-bold h-5 px-2">{(chapter.tier || "PROVISIONAL").toUpperCase()} Tier</Pill>
+                        <Pill variant={chapter.status === "Active" ? "success" : chapter.status === "Pending" ? "warning" : "danger"} className="text-[9px] uppercase tracking-wider font-bold h-5 px-2">{chapter.status.toUpperCase()}</Pill>
+                        {chapter.tier && <Pill variant="info" className="text-[9px] uppercase tracking-wider font-bold h-5 px-2">{chapter.tier.toUpperCase()} Tier</Pill>}
                       </div>
                       <h2 className="mt-1.5 text-[22px] font-semibold tracking-tight leading-tight">{chapter.name}</h2>
                       <p className="mt-1 text-[11.5px] text-muted-foreground flex items-center gap-4">

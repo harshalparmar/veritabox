@@ -155,12 +155,12 @@ export function KnowledgeAuthor({ mode }: { mode: "write" | "edit" }) {
         <div className="space-y-6 min-w-0">
           <div>
             <div className="text-[10px] uppercase tracking-[0.14em] font-mono text-muted-foreground mb-2">
-              {mode === "edit" ? "Edit Intel" : "Authoring Suite — New Intel"}
+              {mode === "edit" ? "Edit Intel" : "Authoring Suite  -  New Intel"}
             </div>
             <input
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="Title — what is this intel?"
+              placeholder="Title  -  what is this intel?"
               className="w-full text-[28px] md:text-[34px] font-semibold tracking-tight leading-tight bg-transparent outline-none border-b border-border focus:border-primary/60 pb-3 transition-colors placeholder:text-muted-foreground/40"
             />
           </div>

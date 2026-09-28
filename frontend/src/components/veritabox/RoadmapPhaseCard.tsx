@@ -1,4 +1,4 @@
-/** RoadmapPhaseCard — Phase and module display card */
+/** RoadmapPhaseCard  -  Phase and module display card */
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, CheckCircle2, Lock, BookOpen, Code, Cpu, Trophy } from "lucide-react";
 import { useState } from "react";

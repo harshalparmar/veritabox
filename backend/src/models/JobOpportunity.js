@@ -16,6 +16,11 @@ const JobOpportunitySchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  companyLogo: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   description: {
     type: String,
     required: true

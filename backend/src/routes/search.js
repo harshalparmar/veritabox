@@ -7,6 +7,7 @@ import Hackathon from '../models/Hackathon.js';
 import Workshop from '../models/Workshop.js';
 import Chapter from '../models/Chapter.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { escapeRegex } from '../utils/security.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/', protect, async (req, res) => {
             return res.json({ users: [], projects: [], bounties: [], articles: [], hackathons: [], workshops: [], chapters: [] });
         }
 
-        const regex = new RegExp(query, 'i');
+        const regex = new RegExp(escapeRegex(query), 'i');
 
         const [users, projects, bounties, articles, hackathons, workshops, chapters] = await Promise.all([
             User.find({ 

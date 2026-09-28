@@ -1,4 +1,4 @@
-/** Static SVG logo — Network node graph representing VeritaBox */
+/** Static SVG logo  -  Network node graph representing VeritaBox */
 export const StackedLogo = ({ size = 16, color = "currentColor" }: { size?: number; color?: string }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     {/* Center node */}

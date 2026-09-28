@@ -4,11 +4,12 @@ import { Link } from "react-router-dom";
 import { PublicShell } from "@/components/veritabox/PublicShell";
 import { Surface } from "@/components/veritabox/UI";
 import {
-  Search, Clock, Users, Calendar,
+  Clock, Users, Calendar,
   Loader2, Globe
 } from "lucide-react";
 import { eventsApi, resolveAssetUrl } from "@/lib/api";
 import { format, isAfter } from "date-fns";
+import { SearchField } from "@/components/veritabox/SearchField";
 
 const STATUS_COLORS: Record<string, string> = {
   Upcoming: "bg-blue-500/10 text-blue-400 border-blue-400/30",
@@ -56,8 +57,8 @@ export default function Events() {
       </div>
 
       <div className="mx-auto max-w-[1300px] px-6 py-8">
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-5">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="mb-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)] md:items-center">
+          <div role="group" aria-label="Filter events" className="flex min-w-0 flex-wrap items-center gap-2">
             {(["All", "Upcoming", "Past"] as const).map((t) => (
               <button 
                 key={t} 
@@ -70,15 +71,7 @@ export default function Events() {
               </button>
             ))}
           </div>
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search events..."
-              className="w-full h-9 bg-card border border-border rounded pl-9 pr-3 text-[12px] outline-none focus:border-primary/50 transition-colors"
-            />
-          </div>
+          <SearchField label="events and tech summits" placeholder="Search events..." value={search} onChange={setSearch} className="w-full" />
         </div>
 
         {isLoading ? (

@@ -185,7 +185,7 @@ export default function HackathonArena() {
     },
   });
 
-  // 3A — Submit offline deliverable (notes + link) before finalizing
+  // 3A  -  Submit offline deliverable (notes + link) before finalizing
   const submitOfflineDeliverableMutation = useMutation({
     mutationFn: (data: { roundNumber: number; notes: string; link: string }) =>
       hackathonsApi.submitOfflineDeliverable(id!, data),
@@ -213,7 +213,7 @@ export default function HackathonArena() {
     }
   }, [questionData, securityInitialized]);
 
-  // 4. Auto-Save Logic (Debounced) — uses refs to avoid stale closure
+  // 4. Auto-Save Logic (Debounced)  -  uses refs to avoid stale closure
   useEffect(() => {
     if (!securityInitialized || isFinished || isLockdown || !isActiveSolver) return;
 
@@ -622,7 +622,7 @@ export default function HackathonArena() {
                             </div>
                             <button
                               onClick={() => {
-                                // 3A — Submit offline deliverable to backend before finalizing
+                                // 3A  -  Submit offline deliverable to backend before finalizing
                                 if (offlineNotes || offlineLink) {
                                   submitOfflineDeliverableMutation.mutate({
                                     roundNumber: team?.currentRound || 1,
@@ -655,7 +655,7 @@ export default function HackathonArena() {
                         <div>
                           <h3 className="text-[14px] text-primary uppercase font-bold tracking-widest mb-2">Observation Mode</h3>
                           <p className="text-[12px] text-muted-foreground max-w-[300px] leading-relaxed">
-                            Only the active solver (Squadron Leader) can interact with the mission console. You are in read-only mode — answers can only be submitted by the assigned leader.
+                            Only the active solver (Squadron Leader) can interact with the mission console. You are in read-only mode  -  answers can only be submitted by the assigned leader.
                           </p>
                         </div>
                       </div>

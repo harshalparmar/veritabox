@@ -70,7 +70,7 @@ export default function ForgeChallenge() {
   const { data: submissions, isLoading: loadingSubmissions } = useQuery({
     queryKey: ["challenge-submissions", id],
     queryFn: () => forgeApi.getSubmissions(id!),
-    enabled: !!id,
+    enabled: !!id && !!user,
   });
 
   const hasSolved = submissions?.some((sub: any) => sub.status === 'Accepted');
@@ -270,6 +270,21 @@ export default function ForgeChallenge() {
           </div>
         </div>
 
+        {!user && (
+          <div className="mb-3 shrink-0">
+            <Surface className="px-4 py-2.5 bg-primary/5 border-primary/20 flex items-center justify-between">
+              <p className="text-[12px] text-muted-foreground">
+                <span className="font-semibold text-foreground">Sign in</span> to run code, submit solutions, and track your progress
+              </p>
+              <Link to="/auth">
+                <button className="h-7 px-4 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest rounded hover:bg-primary/90 transition-all">
+                  Sign In
+                </button>
+              </Link>
+            </Surface>
+          </div>
+        )}
+
         {/* ── SPLIT SCREEN WORKSPACE ── */}
         <div className="flex-1 flex flex-col border border-border bg-card/10 rounded-xl overflow-hidden relative min-h-0">
           <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"} className="h-full items-stretch">
@@ -433,6 +448,18 @@ export default function ForgeChallenge() {
                   {/* TAB 3: SUBMISSIONS HISTORY */}
                   {activeLeftTab === "submissions" && (
                     <div className="space-y-4">
+                      {!user ? (
+                        <div className="py-16 text-center space-y-4">
+                          <History className="h-10 w-10 text-muted-foreground/30 mx-auto" />
+                          <p className="text-[13px] text-muted-foreground">Log in to view your submission history</p>
+                          <Link to="/auth">
+                            <button className="h-9 px-5 bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-widest rounded hover:bg-primary/90 transition-all">
+                              Sign In
+                            </button>
+                          </Link>
+                        </div>
+                      ) : (
+                      <>
                       <div className="flex items-center justify-between border-b border-border/60 pb-2">
                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
                           <History className="h-4 w-4" /> Solvers Log
@@ -472,7 +499,7 @@ export default function ForgeChallenge() {
                                   </div>
                                 </div>
                                 <div className="text-right space-y-1 text-[11px] text-muted-foreground/80">
-                                  <div>{sub.runtime}ms | {sub.memory ? `${(sub.memory / 1024).toFixed(1)}MB` : "—"}</div>
+                                  <div>{sub.runtime}ms | {sub.memory ? `${(sub.memory / 1024).toFixed(1)}MB` : " - "}</div>
                                   <div className="text-[9px] text-muted-foreground/50">{formatDistanceShort(sub.createdAt)}</div>
                                 </div>
                               </div>
@@ -484,6 +511,8 @@ export default function ForgeChallenge() {
                           </div>
                         )}
                       </div>
+                      </>
+                      )}
                     </div>
                   )}
 
@@ -745,14 +774,26 @@ export default function ForgeChallenge() {
 
           <div className="flex gap-2">
             <button
-              onClick={() => runMutation.mutate()}
+              onClick={() => {
+                if (!user) {
+                  toast.error("Authentication Required", { description: "Log in to run code in the sandbox." });
+                  return;
+                }
+                runMutation.mutate();
+              }}
               disabled={runMutation.isPending || submissionMutation.isPending}
               className="h-9 px-4 border border-border hover:bg-secondary text-[11.5px] font-black uppercase tracking-wider rounded flex items-center gap-1.5 transition-all disabled:opacity-50"
             >
               {runMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Play className="h-4 w-4 text-primary" /> Run Code</>}
             </button>
             <button
-              onClick={() => submissionMutation.mutate()}
+              onClick={() => {
+                if (!user) {
+                  toast.error("Authentication Required", { description: "Log in to submit your solution." });
+                  return;
+                }
+                submissionMutation.mutate();
+              }}
               disabled={runMutation.isPending || submissionMutation.isPending || hasSolved}
               className="h-9 px-5 bg-foreground text-background font-black text-[11.5px] uppercase tracking-widest rounded flex items-center gap-1.5 transition-all disabled:opacity-50 hover:opacity-90 shadow-md shadow-primary/5 disabled:cursor-not-allowed"
             >

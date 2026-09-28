@@ -13,6 +13,7 @@ const articleSchema = new mongoose.Schema({
   estimatedReadMinutes: { type: Number, default: 5 },
   prerequisites: [{ type: String }],
   relatedArticles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Article' }],
+  relatedChallenges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Challenge' }],
   lastUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
   tableOfContents: [{ id: String, text: String, level: Number }],
   order: { type: Number, default: 0 },

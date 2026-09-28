@@ -1,5 +1,5 @@
 /**
- * DiagnosticAssessment.tsx — Skill verification diagnostic flow.
+ * DiagnosticAssessment.tsx  -  Skill verification diagnostic flow.
  * Starts diagnostic, presents questions, grades server-side.
  */
 
@@ -93,7 +93,7 @@ export default function DiagnosticAssessmentPage() {
               <h2 className="text-xl font-semibold">Skill Diagnostic: {skillName}</h2>
               <p className="text-sm text-muted-foreground mt-2">
                 This assessment verifies your self-reported knowledge of <strong>{skillName}</strong>.
-                Answer honestly — your roadmap adapts to your real skill level.
+                Answer honestly  -  your roadmap adapts to your real skill level.
               </p>
             </div>
             <Surface className="p-5 space-y-3 mb-6">
@@ -111,7 +111,7 @@ export default function DiagnosticAssessmentPage() {
             </Surface>
             <div className="mb-5 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
               <p className="text-[11px] text-yellow-600 dark:text-yellow-400">
-                Results will be saved permanently to your skill profile. Be honest — the roadmap adapts to help you learn what you actually need.
+                Results will be saved permanently to your skill profile. Be honest  -  the roadmap adapts to help you learn what you actually need.
               </p>
             </div>
             <Button className="w-full gap-2" onClick={handleStart} disabled={loading}>

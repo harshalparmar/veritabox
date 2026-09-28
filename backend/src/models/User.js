@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // Set whenever the password changes; tokens issued before this instant are
+  // rejected so a password reset/change revokes all existing sessions.
+  passwordChangedAt: {
+    type: Date,
+    default: null,
+  },
   role: {
     type: String,
     enum: ['Student', 'Professional', 'Recruiter', 'Teacher', 'Founder'],
@@ -324,11 +330,50 @@ userSchema.pre('save', async function() {
   if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  // Stamp the change (skip on the initial document creation so brand-new
+  // accounts don't immediately invalidate their first-issued token).
+  if (!this.isNew) {
+    this.passwordChangedAt = new Date();
+  }
 });
 
 // Compare password method
 userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// Credential/secret fields that must never leave the server in any serialized
+// output. Internal auth flows read these directly off the live document, so
+// stripping them from toJSON/toObject copies does not affect verification.
+const SENSITIVE_FIELDS = [
+  'password',
+  'twoFactorSecret',
+  'twoFactorBackupCodes',
+  'loginOtp',
+  'loginOtpExpires',
+  'resetPasswordOtp',
+  'resetPasswordExpires',
+  'otpAttempts',
+  'otpLockedUntil',
+];
+
+function stripSensitive(doc, ret) {
+  for (const field of SENSITIVE_FIELDS) delete ret[field];
+  // Keep session metadata (device/IP/last-used) usable by the UI, but never
+  // expose the token hash that could be used to forge/replay a session.
+  if (Array.isArray(ret.activeSessions)) {
+    ret.activeSessions = ret.activeSessions.map((s) => {
+      if (s && typeof s === 'object') {
+        const { tokenHash, ...rest } = s;
+        return rest;
+      }
+      return s;
+    });
+  }
+  return ret;
+}
+
+userSchema.set('toJSON', { transform: stripSensitive });
+userSchema.set('toObject', { transform: stripSensitive });
 
 export default mongoose.model('User', userSchema);

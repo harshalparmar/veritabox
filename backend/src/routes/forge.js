@@ -4,8 +4,16 @@ import ChallengeSubmission from '../models/ChallengeSubmission.js';
 import User from '../models/User.js';
 import { protect, isAdmin, optionalProtect } from '../middleware/authMiddleware.js';
 import { evaluateCode } from '../utils/codeExecution.js';
+import { rateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
+
+// Throttle code execution so the Piston engine can't be flooded.
+const codeExecLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 20,
+  message: 'Too many code executions. Please wait a moment before retrying.',
+});
 
 router.get('/', optionalProtect, async (req, res) => {
     try {
@@ -103,7 +111,7 @@ router.get('/:id', optionalProtect, async (req, res) => {
 
 // @desc    Run code on custom testcase
 // @route   POST /api/forge/:id/run
-router.post('/:id/run', protect, async (req, res) => {
+router.post('/:id/run', protect, codeExecLimiter, async (req, res) => {
     try {
         const { code, language, customInput } = req.body;
         if (!code || typeof code !== 'string' || code.length > 50000) {
@@ -128,7 +136,7 @@ router.post('/:id/run', protect, async (req, res) => {
 
 // @desc    Submit code for evaluation
 // @route   POST /api/forge/:id/submit
-router.post('/:id/submit', protect, async (req, res) => {
+router.post('/:id/submit', protect, codeExecLimiter, async (req, res) => {
     try {
         const { code, language } = req.body;
         if (!code || typeof code !== 'string' || code.length > 50000) {

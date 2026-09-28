@@ -12,18 +12,18 @@ const board = [
 ];
 
 const fleet = [
-  { name: "S. Kapoor", role: "Precision Landing (ArUco)", chapter: "Indira HQ", presence: "online" as Presence },
-  { name: "N. Pillai", role: "Propulsion · ESCs", chapter: "Indira HQ", presence: "offline" as Presence },
+  { name: "S. Kapoor", role: "Precision Landing (ArUco)", chapter: "HQ", presence: "online" as Presence },
+  { name: "N. Pillai", role: "Propulsion · ESCs", chapter: "HQ", presence: "offline" as Presence },
   { name: "M. Sharma", role: "VIO / SLAM", chapter: "Bombay", presence: "online" as Presence },
-  { name: "L. Banerjee", role: "Ground Control Station", chapter: "Indira HQ", presence: "away" as Presence },
+  { name: "L. Banerjee", role: "Ground Control Station", chapter: "HQ", presence: "away" as Presence },
   { name: "D. Reddy", role: "Swarm coordination", chapter: "Hyderabad", presence: "online" as Presence },
-  { name: "P. Ghosh", role: "PCB & power systems", chapter: "Indira HQ", presence: "offline" as Presence },
+  { name: "P. Ghosh", role: "PCB & power systems", chapter: "HQ", presence: "offline" as Presence },
 ];
 
 const advisors = [
-  { name: "Prof. S. Rao", role: "Faculty Advisor — Robotics", org: "Indira University" },
-  { name: "Dr. Anjali Kumar", role: "Mentor — Aerospace", org: "Industry" },
-  { name: "Swakiyam Centre", role: "Incubation support", org: "Indira University" },
+  { name: "Prof. S. Rao", role: "Faculty Advisor, Robotics", org: "Operative Network" },
+  { name: "Dr. Anjali Kumar", role: "Mentor, Aerospace", org: "Industry" },
+  { name: "Swakiyam Centre", role: "Incubation support", org: "Operative Network" },
 ];
 
 const presenceMap: Record<Presence, { color: string; label: string }> = {
@@ -56,7 +56,7 @@ export default function Team() {
     <InfoPage
       kicker="Club / Our Team"
       title="The operatives behind the platform."
-      subtitle="From founding leads charting the roadmap to the field engineers landing drones on a marker the size of a coaster — these are the people running VeritaBox."
+      subtitle="From founding leads charting the roadmap to the field engineers landing drones on a marker the size of a coaster. These are the people running VeritaBox."
       accent="hsl(var(--primary))"
     >
       <Reveal>
@@ -68,7 +68,7 @@ export default function Team() {
                 <LiveCounter value={onlineCount} /> of {board.length + fleet.length} operatives online
               </div>
               <div className="text-[11.5px] text-muted-foreground font-mono">
-                Local time at Indira HQ — {now.toLocaleTimeString("en-IN", { hour12: false })} IST
+                Local time at HQ: {now.toLocaleTimeString("en-IN", { hour12: false })} IST
               </div>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function Team() {
         </div>
       </Section>
 
-      <Section eyebrow="The Fleet" title="Members in the field" description="Precision landing to propulsion — the hands on the hardware.">
+      <Section eyebrow="The Fleet" title="Members in the field" description="Precision landing to propulsion, the hands on the hardware.">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {fleet.map((m, i) => (
             <Reveal key={m.name} delay={i * 50}>

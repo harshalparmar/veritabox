@@ -30,6 +30,14 @@ for (const name of ['JWT_SECRET', 'SA_JWT_SECRET']) {
   }
 }
 
+// ENCRYPTION_KEY protects TOTP secrets at rest. Without it, 2FA setup would
+// otherwise fail at runtime — fail fast at boot instead of mid-request.
+if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length < 32) {
+  console.error('FATAL: ENCRYPTION_KEY must be set to a strong (>=32 char) random secret. Generate one with:');
+  console.error('  node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64url\'))"');
+  process.exit(1);
+}
+
 import authRoutes from './routes/auth.js';
 import roadmapRoutes from './routes/roadmap.js';
 import checklistRoutes from './routes/checklist.js';
@@ -97,11 +105,15 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      // No 'unsafe-inline' for scripts: this API serves JSON and uploaded files,
+      // never inline-script HTML, so any uploaded/served HTML cannot run inline JS.
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'", "https:", "wss:"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
     }
   },
 }));
@@ -127,7 +139,7 @@ io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
     if (!token) return next(new Error('Unauthorized'));
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     const cacheKey = `user:${decoded.id}`;
     let user = await cacheGet(cacheKey);
     if (!user) {
@@ -145,11 +157,20 @@ io.use(async (socket, next) => {
 // Redis-backed presence tracking
 const redis = getRedis();
 
+// Master set of currently-online user IDs. Maintained alongside the per-user
+// socket sets so we never have to scan the keyspace with the O(N), Redis-blocking
+// KEYS command to list who is online.
+const ONLINE_USERS_KEY = 'presence:online_users';
+
 async function markOnline(userId, socketId) {
   const key = `presence:global:${userId}`;
   const sizeBefore = await redis.scard(key);
   await redis.sadd(key, socketId);
-  return sizeBefore === 0;
+  if (sizeBefore === 0) {
+    await redis.sadd(ONLINE_USERS_KEY, userId.toString());
+    return true;
+  }
+  return false;
 }
 
 async function markOffline(userId, socketId) {
@@ -158,14 +179,14 @@ async function markOffline(userId, socketId) {
   const remaining = await redis.scard(key);
   if (remaining === 0) {
     await redis.del(key);
+    await redis.srem(ONLINE_USERS_KEY, userId.toString());
     return true;
   }
   return false;
 }
 
 export async function getOnlineUserIds() {
-  const keys = await redis.keys('presence:global:*');
-  return keys.map(k => k.replace('presence:global:', ''));
+  return await redis.smembers(ONLINE_USERS_KEY);
 }
 
 async function broadcastPresence(hackathonId) {
@@ -283,8 +304,20 @@ io.on('connection', async (socket) => {
     }
   });
 
+  const VALID_VIOLATION_TYPES = new Set(['TAB_SWITCH', 'FULLSCREEN_EXIT', 'MINIMIZE']);
   socket.on('proctor_violation', async (data) => {
     try {
+      data = data || {};
+      // Validate the client-supplied type against the known set; reject anything else.
+      if (!VALID_VIOLATION_TYPES.has(data.type)) return;
+      // Cap details length to prevent DB bloat via oversized payloads.
+      const details = typeof data.details === 'string' ? data.details.slice(0, 500) : '';
+      // Throttle: ignore violations arriving faster than one per 2s per socket, so
+      // a malicious client cannot flood the DB or self-disqualify in a burst.
+      const now = Date.now();
+      if (socket._lastViolationAt && now - socket._lastViolationAt < 2000) return;
+      socket._lastViolationAt = now;
+
       const { resolveHackathonId } = await import('./utils/hackathonUtils.js');
       const hId = await resolveHackathonId(data.hackathonId);
       if (!hId) return;
@@ -295,7 +328,7 @@ io.on('connection', async (socket) => {
         userId: socket.user._id,
         timestamp: new Date(),
         type: data.type,
-        details: data.details
+        details
       });
 
       // 2. Persist violation to HackathonTeam record
@@ -316,7 +349,7 @@ io.on('connection', async (socket) => {
           teamId: team._id,
           userId: socket.user._id,
           type: data.type,
-          details: data.details || ''
+          details
         });
       }
 
@@ -374,7 +407,8 @@ app.use('/api/checklist', checklistRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/panel', (req, res, next) => {
-  req.adminToken = req.headers['x-admin-token'] || req.params?.adminToken;
+  // Admin token is taken from the header only — never from the URL.
+  req.adminToken = req.headers['x-admin-token'];
   next();
 }, adminRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -415,16 +449,49 @@ app.use('/api/publishing', publishingRoutes);
 const __dirname = path.resolve();
 
 // Gate sensitive proctor snapshots (webcam images) behind auth + admin.
-// Accepts JWT via Authorization header OR ?token= (so <img> tags can load them).
+// Two accepted credentials:
+//   1. A normal admin session token in the Authorization header (API access).
+//   2. A short-lived, purpose-scoped asset token in ?token= (so <img> tags can
+//      load them). Session tokens are NOT accepted via the query string, so a
+//      long-lived JWT can never leak through logs/history/Referer.
 const ADMIN_ROLES = ['Founder', 'Faculty', 'Admin'];
+
+// Mint a short-lived (5 min) asset-scoped token. Requires a valid admin session
+// (Authorization header) — never itself takes a token in the URL.
+app.get('/api/media/proctor-token', protect, async (req, res) => {
+  if (!req.user || !ADMIN_ROLES.includes(req.user.role)) {
+    return res.status(403).json({ message: 'Forbidden.' });
+  }
+  const token = jwt.sign(
+    { id: req.user._id, purpose: 'proctor-asset' },
+    process.env.JWT_SECRET,
+    { algorithm: 'HS256', expiresIn: '5m' }
+  );
+  res.json({ token });
+});
+
 app.use('/uploads/proctor', async (req, res, next) => {
   try {
     const bearer = req.headers.authorization?.startsWith('Bearer')
       ? req.headers.authorization.split(' ')[1]
       : null;
-    const token = bearer || req.query.token;
-    if (!token) return res.status(401).json({ message: 'Not authorized.' });
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (bearer) {
+      // Header path: must be a normal admin session token (no purpose claim).
+      const decoded = jwt.verify(bearer, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+      if (decoded.purpose) return res.status(401).json({ message: 'Not authorized.' });
+      const user = await User.findById(decoded.id).select('role');
+      if (!user || !ADMIN_ROLES.includes(user.role)) {
+        return res.status(403).json({ message: 'Forbidden.' });
+      }
+      return next();
+    }
+    // Query path: only a short-lived, purpose-scoped asset token is accepted.
+    const qToken = req.query.token;
+    if (!qToken) return res.status(401).json({ message: 'Not authorized.' });
+    const decoded = jwt.verify(qToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    if (decoded.purpose !== 'proctor-asset') {
+      return res.status(401).json({ message: 'Not authorized.' });
+    }
     const user = await User.findById(decoded.id).select('role');
     if (!user || !ADMIN_ROLES.includes(user.role)) {
       return res.status(403).json({ message: 'Forbidden.' });

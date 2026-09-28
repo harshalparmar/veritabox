@@ -41,7 +41,7 @@ export default function Lab() {
           <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Engineering Intel</div>
           <h1 className="mt-2 text-[32px] font-semibold tracking-tight">Circuit Lab</h1>
           <p className="mt-2 text-[13.5px] text-muted-foreground max-w-xl">
-            Living build logs — tracking innovation from conceptualization to full-scale mission deployment.
+            Living build logs  -  tracking innovation from conceptualization to full-scale mission deployment.
           </p>
         </div>
       </div>

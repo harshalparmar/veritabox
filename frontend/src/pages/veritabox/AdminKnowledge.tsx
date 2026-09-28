@@ -123,7 +123,7 @@ export default function AdminKnowledge() {
                 <Stat label="Total Articles" value={articles?.length?.toString() || "0"} />
                 <Stat label="Published" value={articles?.filter(a => a.isPublished).length?.toString() || "0"} accent="hsl(var(--success))" />
                 <Stat label="Drafts / Pending" value={articles?.filter(a => !a.isPublished).length?.toString() || "0"} accent="hsl(var(--warning))" />
-                <Stat label="Total Knowledge Share" value={articles ? (articles.length * 5).toString() : "0"} hint="Reputation injected" />
+                <Stat label="Total Article Upvotes" value={articles?.reduce((total, article) => total + (article.upvotes?.length || 0), 0).toString() || "0"} />
               </div>
 
               {/* Filters */}

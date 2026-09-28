@@ -233,10 +233,11 @@ router.put('/:id', protect, async (req, res) => {
     if (message.senderId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Unauthorized.' });
     }
-    message.content = content;
+    const cleanContent = sanitizeUserContent(content || '');
+    message.content = cleanContent;
     message.isEdited = true;
     // re-parse mentions
-    const mentionedUsers = await parseMentions(content || '');
+    const mentionedUsers = await parseMentions(cleanContent);
     message.mentions = mentionedUsers.map(u => u._id);
     await message.save();
 

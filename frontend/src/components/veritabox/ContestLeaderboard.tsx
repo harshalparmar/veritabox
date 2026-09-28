@@ -36,7 +36,7 @@ export default function ContestLeaderboard({ hackathonId, roundNumber }: Contest
     );
   }
 
-  // Find first blood per problem — earliest solvedAt time wins
+  // Find first blood per problem  -  earliest solvedAt time wins
   const firstBlood: Record<string, string> = {};
   const firstBloodTime: Record<string, string> = {};
   for (const entry of leaderboard) {

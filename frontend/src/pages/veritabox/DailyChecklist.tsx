@@ -1,6 +1,6 @@
 /**
- * DailyChecklist.tsx — Real personalized daily learning checklist.
- * All data from backend — no hardcoded tasks. Carry-forward, task types, backend validation.
+ * DailyChecklist.tsx  -  Real personalized daily learning checklist.
+ * All data from backend  -  no hardcoded tasks. Carry-forward, task types, backend validation.
  */
 
 import { useState, useEffect } from "react";
